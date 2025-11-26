@@ -1,122 +1,322 @@
 import 'package:flutter/material.dart';
 
+// Punkt wejścia aplikacji - uruchamia główny widget
 void main() {
   runApp(const MyApp());
 }
 
+// Główny widget aplikacji - bezstanowy (stateless)
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'DexCom Login',
+      // Wyłączenie bannera debug w prawym górnym rogu
+      debugShowCheckedModeBanner: false,
+      // Motyw aplikacji z zielonym kolorem głównym
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.green,
+          primary: Colors.green,
+        ),
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      // Startowa strona aplikacji - ekran logowania
+      home: const LoginPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+// Widget strony logowania - stanowy (stateful) dla zarządzania stanem formularza
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _LoginPageState extends State<LoginPage> {
+  // Kontrolery tekstowe do zarządzania wartościami w polach login i hasło
+  final TextEditingController _loginController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  // Klucz formularza do walidacji danych
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    // Zwolnienie zasobów kontrolerów po zamknięciu widoku
+    _loginController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  // Funkcja obsługi logowania standardowego
+  void _handleLogin() {
+    if (_formKey.currentState!.validate()) {
+      // Tutaj dodaj logikę logowania
+      print('Login: ${_loginController.text}');
+      print('Password: ${_passwordController.text}');
+      // TODO: Implementacja logiki uwierzytelniania
+    }
+  }
+
+  // Funkcja obsługi logowania przez Google
+  void _handleGoogleLogin() {
+    // Tutaj dodaj logikę logowania przez Google
+    print('Google Login clicked');
+    // TODO: Implementacja Google Sign-In
+  }
+
+  // Funkcja obsługi przycisku rejestracji
+  void _handleSignUp() {
+    // Tutaj dodaj nawigację do strony rejestracji
+    print('Sign Up clicked');
+    // TODO: Nawigacja do ekranu rejestracji
+  }
+
+  // Funkcja obsługi przycisku przypomnij hasło
+  void _handleForgotPassword() {
+    // Tutaj dodaj nawigację do strony odzyskiwania hasła
+    print('Forgot Password clicked');
+    // TODO: Nawigacja do ekranu resetowania hasła
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      // Gradient tła w kolorach zielono-białych
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF4CAF50), // Zielony góra
+              Color(0xFF81C784), // Jaśniejszy zielony środek
+              Colors.white, // Biały dół
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Logo/Nazwa firmy na górze
+                    const Text(
+                      'DexCom',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                        letterSpacing: 2,
+                        shadows: [
+                          Shadow(
+                            offset: Offset(2, 2),
+                            blurRadius: 4,
+                            color: Colors.black26,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 60),
+
+                    // Pole Login
+                    TextFormField(
+                      controller: _loginController,
+                      decoration: InputDecoration(
+                        labelText: 'Login',
+                        prefixIcon: const Icon(
+                          Icons.person,
+                          color: Colors.green,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.9),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Colors.green,
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Colors.green,
+                            width: 2.5,
+                          ),
+                        ),
+                      ),
+                      // Walidacja - sprawdzenie czy pole nie jest puste
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Proszę wprowadzić login';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Pole Password
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: true, // Ukrywanie znaków hasła
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock, color: Colors.green),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.9),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Colors.green,
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Colors.green,
+                            width: 2.5,
+                          ),
+                        ),
+                      ),
+                      // Walidacja - sprawdzenie czy pole nie jest puste
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Proszę wprowadzić hasło';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 30),
+
+                    // Przycisk Login
+                    ElevatedButton(
+                      onPressed: _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 3,
+                      ),
+                      child: const Text(
+                        'Login',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Separator "OR"
+                    const Row(
+                      children: [
+                        Expanded(
+                          child: Divider(color: Colors.white70, thickness: 1),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'OR',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(color: Colors.white70, thickness: 1),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Przycisk Login with Google z ikoną
+                    OutlinedButton.icon(
+                      onPressed: _handleGoogleLogin,
+                      icon: const Icon(
+                        Icons.g_mobiledata,
+                        size: 32,
+                      ), // Ikona Google (lub użyj custom image)
+                      label: const Text(
+                        'Login with Google',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.green,
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: const BorderSide(color: Colors.green, width: 2),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Dolne opcje: Sign Up i Forgot Password
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Przycisk Sign Up - clickable text
+                        TextButton(
+                          onPressed: _handleSignUp,
+                          child: const Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+
+                        // Przycisk Forgot Password - clickable text
+                        TextButton(
+                          onPressed: _handleForgotPassword,
+                          child: const Text(
+                            'Forgot my password',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
