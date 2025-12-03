@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/home_screen.dart';
 
 // Punkt wejścia aplikacji - uruchamia główny widget
 void main() {
@@ -12,20 +13,35 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'DexCom Login',
+      title: 'DexCom',
       // Wyłączenie bannera debug w prawym górnym rogu
       debugShowCheckedModeBanner: false,
-      // Motyw aplikacji z zielonym kolorem głównym
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-          primary: Colors.green,
+      // Motyw aplikacji z niebieskim kolorem głównym (jak reszta aplikacji)
+      theme: ThemeData.light(useMaterial3: true).copyWith(
+        colorScheme: ColorScheme.light(
+          primary: Colors.blue[600]!,
+          secondary: Colors.green[600]!,
         ),
-        useMaterial3: true,
+      ),
+      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
+        colorScheme: ColorScheme.dark(
+          primary: Colors.blue[400]!,
+          secondary: Colors.green[400]!,
+        ),
       ),
       // Startowa strona aplikacji - ekran logowania
-      home: const LoginPage(),
+      home: const LoginPageWrapper(),
     );
+  }
+}
+
+// Wrapper dla LoginPage do eksportu
+class LoginPageWrapper extends StatelessWidget {
+  const LoginPageWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const LoginPage();
   }
 }
 
@@ -45,6 +61,9 @@ class _LoginPageState extends State<LoginPage> {
   // Klucz formularza do walidacji danych
   final _formKey = GlobalKey<FormState>();
 
+  // Stan motywu (dark/light)
+  bool _isDarkMode = false;
+
   @override
   void dispose() {
     // Zwolnienie zasobów kontrolerów po zamknięciu widoku
@@ -59,7 +78,11 @@ class _LoginPageState extends State<LoginPage> {
       // Tutaj dodaj logikę logowania
       print('Login: ${_loginController.text}');
       print('Password: ${_passwordController.text}');
-      // TODO: Implementacja logiki uwierzytelniania
+
+      // Po udanym logowaniu - przejdź do głównej aplikacji
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
     }
   }
 
@@ -67,7 +90,11 @@ class _LoginPageState extends State<LoginPage> {
   void _handleGoogleLogin() {
     // Tutaj dodaj logikę logowania przez Google
     print('Google Login clicked');
-    // TODO: Implementacja Google Sign-In
+
+    // Po udanym logowaniu - przejdź do głównej aplikacji
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
   }
 
   // Funkcja obsługi przycisku rejestracji
@@ -86,225 +113,273 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Gradient tła w kolorach zielono-białych
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF4CAF50), // Zielony góra
-              Color(0xFF81C784), // Jaśniejszy zielony środek
-              Colors.white, // Biały dół
-            ],
-          ),
+    final isDark = _isDarkMode;
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.light(useMaterial3: true).copyWith(
+        colorScheme: ColorScheme.light(
+          primary: Colors.blue[600]!,
+          secondary: Colors.green[600]!,
         ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+      ),
+      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
+        colorScheme: ColorScheme.dark(
+          primary: Colors.blue[400]!,
+          secondary: Colors.green[400]!,
+        ),
+      ),
+      themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      home: Scaffold(
+        backgroundColor: isDark ? Colors.grey[900] : Colors.grey[50],
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: isDark ? Colors.grey[850] : Colors.white,
+          title: Text(
+            'DexCom',
+            style: TextStyle(
+              color: Colors.blue[600],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          actions: [
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isDarkMode = !_isDarkMode;
+                });
+              },
+              icon: Icon(
+                _isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
               child: Form(
                 key: _formKey,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Logo/Nazwa firmy na górze
-                    const Text(
-                      'DexCom',
+                    // Logo/Nazwa firmy
+                    Text(
+                      'Witaj w DexCom',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 48,
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                        letterSpacing: 2,
-                        shadows: [
-                          Shadow(
-                            offset: Offset(2, 2),
-                            blurRadius: 4,
-                            color: Colors.black26,
-                          ),
-                        ],
+                        color: isDark ? Colors.white : Colors.grey[900],
                       ),
                     ),
-                    const SizedBox(height: 60),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Zaloguj się do swojego konta',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 40),
 
-                    // Pole Login
-                    TextFormField(
-                      controller: _loginController,
-                      decoration: InputDecoration(
-                        labelText: 'Login',
-                        prefixIcon: const Icon(
-                          Icons.person,
-                          color: Colors.green,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.9),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Colors.green,
-                            width: 1.5,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Colors.green,
-                            width: 2.5,
-                          ),
-                        ),
+                    // Card z polami logowania
+                    Card(
+                      elevation: 0,
+                      color: isDark ? Colors.grey[850] : Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      // Walidacja - sprawdzenie czy pole nie jest puste
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Proszę wprowadzić login';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            // Pole Login
+                            TextFormField(
+                              controller: _loginController,
+                              decoration: InputDecoration(
+                                labelText: 'Login',
+                                hintText: 'Wprowadź login',
+                                prefixIcon: Icon(
+                                  Icons.person,
+                                  color: Colors.blue[600],
+                                ),
+                                filled: true,
+                                fillColor: isDark
+                                    ? Colors.grey[700]
+                                    : Colors.grey[100],
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.blue[600]!,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Proszę wprowadzić login';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 20),
 
-                    // Pole Password
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: true, // Ukrywanie znaków hasła
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock, color: Colors.green),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.9),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Colors.green,
-                            width: 1.5,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Colors.green,
-                            width: 2.5,
-                          ),
+                            // Pole Password
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: true,
+                              decoration: InputDecoration(
+                                labelText: 'Hasło',
+                                hintText: 'Wprowadź hasło',
+                                prefixIcon: Icon(
+                                  Icons.lock,
+                                  color: Colors.blue[600],
+                                ),
+                                filled: true,
+                                fillColor: isDark
+                                    ? Colors.grey[700]
+                                    : Colors.grey[100],
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.blue[600]!,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Proszę wprowadzić hasło';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
                         ),
                       ),
-                      // Walidacja - sprawdzenie czy pole nie jest puste
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Proszę wprowadzić hasło';
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 24),
 
                     // Przycisk Login
                     ElevatedButton(
                       onPressed: _handleLogin,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: Colors.blue[600],
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 3,
+                        elevation: 2,
                       ),
                       child: const Text(
-                        'Login',
+                        'Zaloguj się',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-                    // Separator "OR"
-                    const Row(
+                    // Separator "LUB"
+                    Row(
                       children: [
                         Expanded(
-                          child: Divider(color: Colors.white70, thickness: 1),
+                          child: Divider(
+                            color: isDark ? Colors.grey[700] : Colors.grey[300],
+                            thickness: 1,
+                          ),
                         ),
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'OR',
+                            'LUB',
                             style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
                         Expanded(
-                          child: Divider(color: Colors.white70, thickness: 1),
+                          child: Divider(
+                            color: isDark ? Colors.grey[700] : Colors.grey[300],
+                            thickness: 1,
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-                    // Przycisk Login with Google z ikoną
+                    // Przycisk Login with Google
                     OutlinedButton.icon(
                       onPressed: _handleGoogleLogin,
-                      icon: const Icon(
-                        Icons.g_mobiledata,
-                        size: 32,
-                      ), // Ikona Google (lub użyj custom image)
+                      icon: const Icon(Icons.g_mobiledata, size: 32),
                       label: const Text(
-                        'Login with Google',
+                        'Zaloguj przez Google',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.green,
-                        backgroundColor: Colors.white,
+                        foregroundColor: isDark
+                            ? Colors.grey[300]
+                            : Colors.grey[700],
+                        backgroundColor: isDark
+                            ? Colors.grey[850]
+                            : Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        side: const BorderSide(color: Colors.green, width: 2),
+                        side: BorderSide(
+                          color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                          width: 1.5,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 24),
 
                     // Dolne opcje: Sign Up i Forgot Password
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Przycisk Sign Up - clickable text
                         TextButton(
                           onPressed: _handleSignUp,
-                          child: const Text(
-                            'Sign Up',
+                          child: Text(
+                            'Utwórz konto',
                             style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 16,
+                              color: Colors.blue[600],
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
                             ),
                           ),
                         ),
-
-                        // Przycisk Forgot Password - clickable text
                         TextButton(
                           onPressed: _handleForgotPassword,
-                          child: const Text(
-                            'Forgot my password',
+                          child: Text(
+                            'Zapomniałeś hasła?',
                             style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 16,
+                              color: Colors.blue[600],
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
                             ),
                           ),
                         ),
