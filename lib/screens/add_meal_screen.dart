@@ -19,10 +19,10 @@ class _AddMealScreenState extends State<AddMealScreen> {
   bool showSuccess = false;
 
   final List<Map<String, dynamic>> mealIcons = [
-    {'icon': Icons.coffee, 'label': 'Śniadanie', 'color': Colors.amber},
-    {'icon': Icons.soup_kitchen, 'label': 'Obiad', 'color': Colors.orange},
-    {'icon': Icons.dinner_dining, 'label': 'Kolacja', 'color': Colors.red},
-    {'icon': Icons.apple, 'label': 'Przekąska', 'color': Colors.green},
+    {'icon': Icons.coffee, 'label': 'Breakfast', 'color': Colors.amber},
+    {'icon': Icons.soup_kitchen, 'label': 'Lunch', 'color': Colors.orange},
+    {'icon': Icons.dinner_dining, 'label': 'Dinner', 'color': Colors.red},
+    {'icon': Icons.apple, 'label': 'Snack', 'color': Colors.green},
   ];
 
   @override
@@ -62,7 +62,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Posiłek zapisany!',
+              'Meal saved!',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],
@@ -86,7 +86,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Dodaj posiłek',
+                  'Add meal',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -107,7 +107,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Typ posiłku',
+                      'Meal type',
                       style: TextStyle(
                         fontSize: 14,
                         color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -181,7 +181,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Nazwa posiłku',
+                      'Meal name',
                       style: TextStyle(
                         fontSize: 14,
                         color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -191,7 +191,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                     TextFormField(
                       controller: _mealNameController,
                       decoration: InputDecoration(
-                        hintText: 'np. Płatki owsiane z owocami',
+                        hintText: 'e.g. Oatmeal with fruits',
                         filled: true,
                         fillColor: isDark ? Colors.grey[700] : Colors.grey[100],
                         border: OutlineInputBorder(
@@ -201,7 +201,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Proszę podać nazwę posiłku';
+                          return 'Please enter the meal name';
                         }
                         return null;
                       },
@@ -222,7 +222,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Węglowodany (g)',
+                      'Carbs (g)',
                       style: TextStyle(
                         fontSize: 14,
                         color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -233,7 +233,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                       controller: _carbsController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        hintText: 'np. 45',
+                        hintText: 'e.g. 45',
                         filled: true,
                         fillColor: isDark ? Colors.grey[700] : Colors.grey[100],
                         border: OutlineInputBorder(
@@ -243,7 +243,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Proszę podać ilość węglowodanów';
+                          return 'Please enter carbohydrate amount';
                         }
                         return null;
                       },
@@ -260,7 +260,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
               color: isDark ? Colors.grey[850] : Colors.white,
               child: ListTile(
                 leading: Icon(Icons.access_time, color: Colors.blue),
-                title: const Text('Czas'),
+                title: const Text('Time'),
                 subtitle: Text(selectedTime.format(context)),
                 onTap: () async {
                   final TimeOfDay? picked = await showTimePicker(
@@ -289,7 +289,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 ),
               ),
               child: const Text(
-                'Zapisz posiłek',
+                'Save  Meal',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),

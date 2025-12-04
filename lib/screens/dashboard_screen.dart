@@ -62,7 +62,7 @@ class DashboardScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Aktualny poziom',
+                        'Current Level',
                         style: TextStyle(
                           color: isDark ? Colors.grey[400] : Colors.grey[600],
                           fontSize: 14,
@@ -77,7 +77,7 @@ class DashboardScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Normalny',
+                            'Normal',
                             style: TextStyle(
                               color: Colors.green,
                               fontSize: 12,
@@ -122,7 +122,7 @@ class DashboardScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Stabilny',
+                        'Stable',
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -130,7 +130,7 @@ class DashboardScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '• Zaktualizowano 2 min temu',
+                        '• Updated 2 min ago',
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark ? Colors.grey[500] : Colors.grey[400],
@@ -161,7 +161,7 @@ class DashboardScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Średnia 24h',
+                          '24h Average',
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -220,7 +220,7 @@ class DashboardScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'w normie',
+                          'in range',
                           style: TextStyle(
                             fontSize: 10,
                             color: isDark ? Colors.grey[500] : Colors.grey[500],
@@ -247,7 +247,7 @@ class DashboardScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Epizody',
+                          'Episodes',
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -282,7 +282,7 @@ class DashboardScreen extends StatelessWidget {
                           ],
                         ),
                         Text(
-                          'hipo/hiper',
+                          'low/high',
                           style: TextStyle(
                             fontSize: 10,
                             color: isDark ? Colors.grey[500] : Colors.grey[500],
@@ -310,7 +310,7 @@ class DashboardScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Poziom glukozy - ostatnie 24h',
+                    'Glucose level - last 24h',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -361,8 +361,9 @@ class DashboardScreen extends StatelessWidget {
                               reservedSize: 30,
                               interval: 4,
                               getTitlesWidget: (value, meta) {
-                                if (value.toInt() >= glucoseData.length)
+                                if (value.toInt() >= glucoseData.length) {
                                   return const SizedBox();
+                                }
                                 final time = glucoseData[value.toInt()].time;
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 8),

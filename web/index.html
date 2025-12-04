@@ -29,8 +29,29 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>flutter_application_dexcom</title>
+  <title>DexCom - Glucose Monitoring</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Firebase Configuration -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDEXAMPLE-REPLACE-WITH-YOUR-API-KEY",
+      authDomain: "your-project.firebaseapp.com",
+      projectId: "your-project-id",
+      storageBucket: "your-project.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef123456"
+    };
+    
+    // Initialize Firebase
+    window.firebaseApp = initializeApp(firebaseConfig);
+    window.firebaseAuth = getAuth(window.firebaseApp);
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

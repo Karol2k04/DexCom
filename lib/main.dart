@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'firebase_options.dart';
 import 'screens/home_screen.dart';
+import 'screens/signup_screen.dart';
+import 'services/auth_service.dart';
 
 // Punkt wejścia aplikacji - uruchamia główny widget
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -29,8 +36,26 @@ class MyApp extends StatelessWidget {
           secondary: Colors.green[400]!,
         ),
       ),
-      // Startowa strona aplikacji - ekran logowania
-      home: const LoginPageWrapper(),
+      // Używamy StreamBuilder do obsługi stanu zalogowania
+      home: StreamBuilder<User?>(
+        stream: AuthService().authStateChanges,
+        builder: (context, snapshot) {
+          // Ładowanie
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          // Jeśli użytkownik jest zalogowany - pokaż HomeScreen
+          if (snapshot.hasData) {
+            return const HomeScreen();
+          }
+
+          // Jeśli niezalogowany - pokaż LoginPage
+          return const LoginPage();
+        },
+      ),
     );
   }
 }
@@ -64,6 +89,12 @@ class _LoginPageState extends State<LoginPage> {
   // Stan motywu (dark/light)
   bool _isDarkMode = false;
 
+  // Stan ładowania
+  bool _isLoading = false;
+
+  // Instancja serwisu autentykacji
+  final AuthService _authService = AuthService();
+
   @override
   void dispose() {
     // Zwolnienie zasobów kontrolerów po zamknięciu widoku
@@ -73,42 +104,87 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // Funkcja obsługi logowania standardowego
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      // Tutaj dodaj logikę logowania
-      print('Login: ${_loginController.text}');
-      print('Password: ${_passwordController.text}');
+      setState(() => _isLoading = true);
 
-      // Po udanym logowaniu - przejdź do głównej aplikacji
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+      try {
+        await _authService.signInWithEmailAndPassword(
+          email: _loginController.text.trim(),
+          password: _passwordController.text,
+        );
+        // Nawigacja obsługiwana przez StreamBuilder w MyApp
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     }
   }
 
   // Funkcja obsługi logowania przez Google
-  void _handleGoogleLogin() {
-    // Tutaj dodaj logikę logowania przez Google
-    print('Google Login clicked');
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
 
-    // Po udanym logowaniu - przejdź do głównej aplikacji
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+    try {
+      await _authService.signInWithGoogle();
+      // Nawigacja obsługiwana przez StreamBuilder w MyApp
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   // Funkcja obsługi przycisku rejestracji
   void _handleSignUp() {
-    // Tutaj dodaj nawigację do strony rejestracji
-    print('Sign Up clicked');
-    // TODO: Nawigacja do ekranu rejestracji
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SignUpScreen()),
+    );
   }
 
   // Funkcja obsługi przycisku przypomnij hasło
-  void _handleForgotPassword() {
-    // Tutaj dodaj nawigację do strony odzyskiwania hasła
-    print('Forgot Password clicked');
-    // TODO: Nawigacja do ekranu resetowania hasła
+  Future<void> _handleForgotPassword() async {
+    if (_loginController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Wprowadź email, aby zresetować hasło'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await _authService.sendPasswordResetEmail(_loginController.text.trim());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Wysłano link do resetowania hasła'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   @override
@@ -169,7 +245,7 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     // Logo/Nazwa firmy
                     Text(
-                      'Witaj w DexCom',
+                      'Welcome to DexCom',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 32,
@@ -179,7 +255,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Zaloguj się do swojego konta',
+                      'Sign in to your account',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
@@ -203,8 +279,8 @@ class _LoginPageState extends State<LoginPage> {
                             TextFormField(
                               controller: _loginController,
                               decoration: InputDecoration(
-                                labelText: 'Login',
-                                hintText: 'Wprowadź login',
+                                labelText: 'Email',
+                                hintText: 'Enter your email',
                                 prefixIcon: Icon(
                                   Icons.person,
                                   color: Colors.blue[600],
@@ -227,7 +303,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Proszę wprowadzić login';
+                                  return 'Please enter email';
                                 }
                                 return null;
                               },
@@ -239,8 +315,8 @@ class _LoginPageState extends State<LoginPage> {
                               controller: _passwordController,
                               obscureText: true,
                               decoration: InputDecoration(
-                                labelText: 'Hasło',
-                                hintText: 'Wprowadź hasło',
+                                labelText: 'Password',
+                                hintText: 'Enter your password',
                                 prefixIcon: Icon(
                                   Icons.lock,
                                   color: Colors.blue[600],
@@ -263,7 +339,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Proszę wprowadzić hasło';
+                                  return 'Please enter password';
                                 }
                                 return null;
                               },
@@ -276,7 +352,7 @@ class _LoginPageState extends State<LoginPage> {
 
                     // Przycisk Login
                     ElevatedButton(
-                      onPressed: _handleLogin,
+                      onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue[600],
                         foregroundColor: Colors.white,
@@ -286,13 +362,24 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         elevation: 2,
                       ),
-                      child: const Text(
-                        'Zaloguj się',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Text(
+                              'Sign In',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                     const SizedBox(height: 16),
 
@@ -308,7 +395,7 @@ class _LoginPageState extends State<LoginPage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'LUB',
+                            'OR',
                             style: TextStyle(
                               color: isDark
                                   ? Colors.grey[400]
@@ -329,10 +416,10 @@ class _LoginPageState extends State<LoginPage> {
 
                     // Przycisk Login with Google
                     OutlinedButton.icon(
-                      onPressed: _handleGoogleLogin,
+                      onPressed: _isLoading ? null : _handleGoogleLogin,
                       icon: const Icon(Icons.g_mobiledata, size: 32),
                       label: const Text(
-                        'Zaloguj przez Google',
+                        'Sign in with Google',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -364,7 +451,7 @@ class _LoginPageState extends State<LoginPage> {
                         TextButton(
                           onPressed: _handleSignUp,
                           child: Text(
-                            'Utwórz konto',
+                            'Create Account',
                             style: TextStyle(
                               color: Colors.blue[600],
                               fontSize: 14,
@@ -375,7 +462,7 @@ class _LoginPageState extends State<LoginPage> {
                         TextButton(
                           onPressed: _handleForgotPassword,
                           child: Text(
-                            'Zapomniałeś hasła?',
+                            'Forgot Password?',
                             style: TextStyle(
                               color: Colors.blue[600],
                               fontSize: 14,

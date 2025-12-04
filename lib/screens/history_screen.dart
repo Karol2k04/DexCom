@@ -17,14 +17,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
     HistoryEntry(
       id: '1',
       time: '22:30',
-      date: 'Dzisiaj',
+      date: 'Today',
       glucose: 112,
       trend: 'stable',
     ),
     HistoryEntry(
       id: '2',
       time: '20:15',
-      date: 'Dzisiaj',
+      date: 'Today',
       glucose: 148,
       insulin: 8,
       trend: 'up',
@@ -32,30 +32,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
     HistoryEntry(
       id: '3',
       time: '19:00',
-      date: 'Dzisiaj',
+      date: 'Today',
       glucose: 115,
-      meal: 'Kolacja',
+      meal: 'Dinner',
       carbs: 45,
       trend: 'up',
     ),
     HistoryEntry(
       id: '4',
       time: '17:30',
-      date: 'Dzisiaj',
+      date: 'Today',
       glucose: 98,
       trend: 'stable',
     ),
     HistoryEntry(
       id: '5',
       time: '15:00',
-      date: 'Dzisiaj',
+      date: 'Today',
       glucose: 138,
       trend: 'down',
     ),
     HistoryEntry(
       id: '6',
       time: '14:30',
-      date: 'Dzisiaj',
+      date: 'Today',
       glucose: 155,
       insulin: 10,
       alert: 'high',
@@ -64,23 +64,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
     HistoryEntry(
       id: '7',
       time: '13:00',
-      date: 'Dzisiaj',
+      date: 'Today',
       glucose: 108,
-      meal: 'Obiad',
+      meal: 'Lunch',
       carbs: 60,
       trend: 'up',
     ),
     HistoryEntry(
       id: '8',
       time: '11:00',
-      date: 'Dzisiaj',
+      date: 'Today',
       glucose: 110,
       trend: 'down',
     ),
     HistoryEntry(
       id: '9',
       time: '09:30',
-      date: 'Dzisiaj',
+      date: 'Today',
       glucose: 145,
       insulin: 6,
       trend: 'up',
@@ -88,9 +88,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     HistoryEntry(
       id: '10',
       time: '08:00',
-      date: 'Dzisiaj',
+      date: 'Today',
       glucose: 105,
-      meal: 'Śniadanie',
+      meal: 'Breakfast',
       carbs: 50,
       trend: 'up',
     ),
@@ -118,7 +118,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Historia pomiarów',
+            'Measurement History',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -131,7 +131,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: ['24h', '7 dni', '14 dni', '30 dni'].map((filter) {
+              children: ['24h', '7 days', '14 days', '30 days'].map((filter) {
                 final isSelected = selectedPeriod == filter;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
@@ -285,7 +285,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '${entry.insulin}U insuliny',
+                                '${entry.insulin}U insulin',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: isDark

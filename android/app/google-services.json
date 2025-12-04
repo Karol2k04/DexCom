@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "701912503570",
+    "project_id": "dexcom-f4d1b",
+    "storage_bucket": "dexcom-f4d1b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:701912503570:android:4e8df4ce8fd7ff21ba8fcb",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_dexcom"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr56EYSD5L40KEtnRpMy-VFYjpdqGSk_s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

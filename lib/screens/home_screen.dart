@@ -4,7 +4,7 @@ import 'history_screen.dart';
 import 'statistics_screen.dart';
 import 'add_meal_screen.dart';
 import 'settings_screen.dart';
-import '../main.dart';
+import '../services/auth_service.dart';
 
 // Główny ekran aplikacji z bottom navigation
 class HomeScreen extends StatefulWidget {
@@ -83,18 +83,16 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             // Przycisk wylogowania
             IconButton(
-              onPressed: () {
-                // Wylogowanie - powrót do strony logowania
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginPageWrapper()),
-                  (route) => false,
-                );
+              onPressed: () async {
+                // Wylogowanie z Firebase
+                await AuthService().signOut();
+                // Nawigacja obs\u0142ugiwana przez StreamBuilder w MyApp
               },
               icon: Icon(
                 Icons.logout,
                 color: _isDarkMode ? Colors.grey[400] : Colors.grey[600],
               ),
-              tooltip: 'Wyloguj się',
+              tooltip: 'Sign Out',
             ),
             // Przycisk dark/light mode
             IconButton(
@@ -103,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _isDarkMode ? Icons.light_mode : Icons.dark_mode,
                 color: _isDarkMode ? Colors.grey[400] : Colors.grey[600],
               ),
-              tooltip: _isDarkMode ? 'Tryb jasny' : 'Tryb ciemny',
+              tooltip: _isDarkMode ? 'Light Mode' : 'Dark Mode',
             ),
           ],
         ),
@@ -131,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildNavButton(
                   index: 1,
                   icon: Icons.history,
-                  label: 'Historia',
+                  label: 'History',
                 ),
                 // Dodaj posiłek (FAB)
                 _buildCenterFAB(),
@@ -139,13 +137,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildNavButton(
                   index: 3,
                   icon: Icons.bar_chart,
-                  label: 'Statystyki',
+                  label: 'Statistics',
                 ),
                 // Ustawienia
                 _buildNavButton(
                   index: 4,
                   icon: Icons.settings,
-                  label: 'Ustawienia',
+                  label: 'Settings',
                 ),
               ],
             ),

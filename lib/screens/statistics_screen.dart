@@ -11,13 +11,13 @@ class StatisticsScreen extends StatelessWidget {
 
     // Dane mock dla wykresu tygodniowego
     final weeklyData = [
-      {'day': 'Pn', 'glucose': 112.0, 'insulin': 45.0},
-      {'day': 'Wt', 'glucose': 118.0, 'insulin': 48.0},
-      {'day': 'Śr', 'glucose': 108.0, 'insulin': 42.0},
-      {'day': 'Cz', 'glucose': 125.0, 'insulin': 52.0},
-      {'day': 'Pt', 'glucose': 115.0, 'insulin': 46.0},
-      {'day': 'Sb', 'glucose': 105.0, 'insulin': 40.0},
-      {'day': 'Nd', 'glucose': 110.0, 'insulin': 44.0},
+      {'day': 'Mon', 'glucose': 112.0, 'insulin': 45.0},
+      {'day': 'Tue', 'glucose': 118.0, 'insulin': 48.0},
+      {'day': 'Wed', 'glucose': 108.0, 'insulin': 42.0},
+      {'day': 'Thu', 'glucose': 125.0, 'insulin': 52.0},
+      {'day': 'Fri', 'glucose': 115.0, 'insulin': 46.0},
+      {'day': 'Sat', 'glucose': 105.0, 'insulin': 40.0},
+      {'day': 'Sun', 'glucose': 110.0, 'insulin': 44.0},
     ];
 
     return SingleChildScrollView(
@@ -26,7 +26,7 @@ class StatisticsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Statystyki',
+            'Statistics',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -35,7 +35,7 @@ class StatisticsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Ostatnie 7 dni',
+            'Last 7 days',
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -64,7 +64,7 @@ class StatisticsScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'TIR średnia',
+                          'Avg TIR',
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.grey[500],
@@ -98,7 +98,7 @@ class StatisticsScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Dni w normie',
+                          'Days in range',
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.grey[500],
@@ -128,7 +128,7 @@ class StatisticsScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Śr. glukoza',
+                          'Avg glucose',
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.grey[500],
@@ -156,7 +156,7 @@ class StatisticsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Średnie dzienne glukozy',
+                    'Daily average glucose',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -191,8 +191,9 @@ class StatisticsScreen extends StatelessWidget {
                             sideTitles: SideTitles(
                               showTitles: true,
                               getTitlesWidget: (value, meta) {
-                                if (value.toInt() >= weeklyData.length)
+                                if (value.toInt() >= weeklyData.length) {
                                   return const SizedBox();
+                                }
                                 return Text(
                                   weeklyData[value.toInt()]['day'] as String,
                                   style: TextStyle(

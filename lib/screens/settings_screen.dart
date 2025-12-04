@@ -29,7 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Ustawienia',
+            'Settings',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -38,7 +38,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Personalizuj swoją aplikację',
+            'Personalize your app',
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -63,7 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Icon(Icons.adjust, color: Colors.blue, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        'Zakres docelowy',
+                        'Target Range',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -76,7 +76,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   // Dolna granica
                   Text(
-                    'Dolna granica',
+                    'Lower limit',
                     style: TextStyle(
                       fontSize: 14,
                       color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -116,7 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   // Górna granica
                   Text(
-                    'Górna granica',
+                    'Upper limit',
                     style: TextStyle(
                       fontSize: 14,
                       color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -164,7 +164,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Twój zakres docelowy',
+                          'Your target range',
                           style: TextStyle(
                             fontSize: 14,
                             color: isDark ? Colors.grey[300] : Colors.grey[700],
@@ -199,7 +199,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Jednostki',
+                    'Units',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -287,7 +287,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Icon(Icons.notifications, color: Colors.orange, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        'Powiadomienia',
+                        'Notifications',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -298,8 +298,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 12),
                   SwitchListTile(
-                    title: const Text('Niski poziom glukozy'),
-                    subtitle: const Text('Alert przy hipoglikemii'),
+                    title: const Text('Low glucose level'),
+                    subtitle: const Text('Alert for hypoglycemia'),
                     value: notifications['low']!,
                     onChanged: (value) {
                       setState(() {
@@ -309,8 +309,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     contentPadding: EdgeInsets.zero,
                   ),
                   SwitchListTile(
-                    title: const Text('Wysoki poziom glukozy'),
-                    subtitle: const Text('Alert przy hiperglikemii'),
+                    title: const Text('High glucose level'),
+                    subtitle: const Text('Alert for hyperglycemia'),
                     value: notifications['high']!,
                     onChanged: (value) {
                       setState(() {
@@ -320,10 +320,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     contentPadding: EdgeInsets.zero,
                   ),
                   SwitchListTile(
-                    title: const Text('Przypomnienie o posiłkach'),
-                    subtitle: const Text(
-                      'Powiadomienia o regularnych posiłkach',
-                    ),
+                    title: const Text('Meal reminders'),
+                    subtitle: const Text('Notifications about regular meals'),
                     value: notifications['meals']!,
                     onChanged: (value) {
                       setState(() {
@@ -333,8 +331,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     contentPadding: EdgeInsets.zero,
                   ),
                   SwitchListTile(
-                    title: const Text('Przypomnienie o insulinie'),
-                    subtitle: const Text('Powiadomienia o dawkach'),
+                    title: const Text('Insulin reminders'),
+                    subtitle: const Text('Dose notifications'),
                     value: notifications['insulin']!,
                     onChanged: (value) {
                       setState(() {
