@@ -35,7 +35,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme="com.dextest.mobile"
+                    android:scheme="com.crossplatform.dexcom"
                     android:host="oauthredirect" />
             </intent-filter>
         </activity>

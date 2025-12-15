@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/dexcom_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // Ekran ustawień
 class SettingsScreen extends StatefulWidget {
@@ -32,40 +33,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _initDexcomStatus() async {
-    final connected = await _dexcomService.isConnected();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final connected = await _dexcomService.isConnected(user.uid);
     if (!mounted) return;
+
     setState(() {
       _dexcomConnected = connected;
     });
   }
 
   Future<void> _handleDexcomButton() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
     setState(() {
       _loadingDexcom = true;
     });
 
     if (_dexcomConnected) {
-      // disconnect
-      await _dexcomService.disconnect();
-      if (!mounted) return;
+      // (Optional) backend disconnect endpoint
+      // For now, just clear UI state
       setState(() {
         _dexcomConnected = false;
         _loadingDexcom = false;
       });
     } else {
-      // connect (OAuth flow)
-      final ok = await _dexcomService.connect();
-      if (!mounted) return;
-      setState(() {
-        _dexcomConnected = ok;
-        _loadingDexcom = false;
-      });
+      // Start Dexcom OAuth via backend
+      try {
+        await _dexcomService.connect(user.uid);   // <-- FIXED
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _loadingDexcom = false;
+        });
 
-      if (!ok) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Dexcom connection failed')),
         );
+        return;
       }
+
+      // After user logs in (browser), check connection status
+      final connected = await _dexcomService.isConnected(user.uid);
+
+      if (!mounted) return;
+      setState(() {
+        _dexcomConnected = connected;
+        _loadingDexcom = false;
+      });
     }
   }
 

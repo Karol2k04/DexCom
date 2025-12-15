@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../models/glucose_reading.dart';
 import '../services/dexcom_service.dart';
 
@@ -24,15 +26,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<List<GlucoseReading>> _loadData() async {
-    // Najpierw spróbuj pobrać dane z Dexcom, jeśli jest połączony
-    if (await _dexcomService.isConnected()) {
-      try {
-        final data = await _dexcomService.fetchRecentGlucose();
-        if (data.isNotEmpty) {
-          return data;
+    // aktualnie zalogowany użytkownik Firebase
+    final user = FirebaseAuth.instance.currentUser;
+
+    // jeśli nie ma użytkownika – od razu zwróć dane mock
+    if (user != null) {
+      final uid = user.uid;
+
+      // Najpierw spróbuj pobrać dane z Dexcom, jeśli jest połączony
+      if (await _dexcomService.isConnected(uid)) {
+        try {
+          final data = await _dexcomService.fetchRecentGlucose(uid);
+          if (data.isNotEmpty) {
+            return data;
+          }
+        } catch (e) {
+          // w razie błędu wracamy do danych mock
+          debugPrint('Dexcom error: $e');
         }
-      } catch (_) {
-        // w razie błędu wracamy do danych mock
       }
     }
 
