@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/dexcom_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // Ekran ustawień
 class SettingsScreen extends StatefulWidget {
@@ -18,6 +20,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
     'meals': true,
     'insulin': false,
   };
+
+  // Dexcom
+  final DexcomService _dexcomService = DexcomService();
+  bool _dexcomConnected = false;
+  bool _loadingDexcom = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDexcomStatus();
+  }
+
+  Future<void> _initDexcomStatus() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final connected = await _dexcomService.isConnected(user.uid);
+    if (!mounted) return;
+
+    setState(() {
+      _dexcomConnected = connected;
+    });
+  }
+
+  Future<void> _handleDexcomButton() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    setState(() {
+      _loadingDexcom = true;
+    });
+
+    if (_dexcomConnected) {
+      // (Optional) backend disconnect endpoint
+      // For now, just clear UI state
+      setState(() {
+        _dexcomConnected = false;
+        _loadingDexcom = false;
+      });
+    } else {
+      // Start Dexcom OAuth via backend
+      try {
+        await _dexcomService.connect(user.uid);   // <-- FIXED
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _loadingDexcom = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dexcom connection failed')),
+        );
+        return;
+      }
+
+      // After user logs in (browser), check connection status
+      final connected = await _dexcomService.isConnected(user.uid);
+
+      if (!mounted) return;
+      setState(() {
+        _dexcomConnected = connected;
+        _loadingDexcom = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +112,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 24),
+
+          // === DEXCOM CARD ===
+          Card(
+            elevation: 0,
+            color: isDark ? Colors.grey[850] : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.bluetooth, color: Colors.green, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Dexcom Integration',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : Colors.grey[900],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _dexcomConnected
+                        ? 'Dexcom is connected. Data from sensor can be used on dashboard.'
+                        : 'Dexcom is not connected. Connect to read real glucose values.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? Colors.grey[300] : Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _loadingDexcom ? null : _handleDexcomButton,
+                      child: _loadingDexcom
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(
+                              _dexcomConnected
+                                  ? 'Disconnect Dexcom'
+                                  : 'Connect Dexcom',
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
 
           // Zakres docelowy
           Card(
