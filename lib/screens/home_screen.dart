@@ -100,54 +100,43 @@ class _HomeScreenState extends State<HomeScreen> {
         // Zawartość - aktualny ekran
         body: IndexedStack(index: _currentIndex, children: _screens),
         // Bottom Navigation Bar
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: _isDarkMode ? Colors.grey[800]! : AppTheme.mediumGray,
-                width: 1,
-              ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          backgroundColor: _isDarkMode ? AppTheme.darkSurface : AppTheme.white,
+          selectedItemColor: AppTheme.primaryBlue,
+          unselectedItemColor: _isDarkMode
+              ? Colors.grey[400]
+              : AppTheme.darkGray,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          items: [
+            BottomNavigationBarItem(
+              icon: const Text('📊', style: TextStyle(fontSize: 20)),
+              label: 'Dashboard',
             ),
-          ),
-          child: BottomAppBar(
-            color: _isDarkMode ? AppTheme.darkSurface : AppTheme.white,
-            elevation: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                // Dashboard
-                _buildNavButton(
-                  index: 0,
-                  icon: Icons.home,
-                  emoji: '📊',
-                  label: 'Dashboard',
-                ),
-                // Historia
-                _buildNavButton(
-                  index: 1,
-                  icon: Icons.history,
-                  emoji: '📋',
-                  label: 'History',
-                ),
-                // Dodaj posiłek (FAB)
-                _buildCenterFAB(),
-                // Statystyki
-                _buildNavButton(
-                  index: 3,
-                  icon: Icons.bar_chart,
-                  emoji: '📈',
-                  label: 'Statistics',
-                ),
-                // Ustawienia
-                _buildNavButton(
-                  index: 4,
-                  icon: Icons.settings,
-                  emoji: '⚙️',
-                  label: 'Settings',
-                ),
-              ],
+            BottomNavigationBarItem(
+              icon: const Text('📋', style: TextStyle(fontSize: 20)),
+              label: 'History',
             ),
-          ),
+            BottomNavigationBarItem(
+              icon: const Text('🍽️', style: TextStyle(fontSize: 20)),
+              label: 'Add Meal',
+            ),
+            BottomNavigationBarItem(
+              icon: const Text('📈', style: TextStyle(fontSize: 20)),
+              label: 'Statistics',
+            ),
+            BottomNavigationBarItem(
+              icon: const Text('⚙️', style: TextStyle(fontSize: 20)),
+              label: 'Settings',
+            ),
+          ],
         ),
       ),
     );
