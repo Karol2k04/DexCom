@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 // Provider zarządzający motywem aplikacji (jasny/ciemny)
 class ThemeProvider extends ChangeNotifier {
@@ -14,18 +15,6 @@ class ThemeProvider extends ChangeNotifier {
 
   // Zwraca odpowiedni ThemeData w zależności od trybu
   ThemeData get themeData {
-    return _isDarkMode
-        ? ThemeData.dark(useMaterial3: true).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: Colors.blue[400]!,
-              secondary: Colors.green[400]!,
-            ),
-          )
-        : ThemeData.light(useMaterial3: true).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.blue[600]!,
-              secondary: Colors.green[600]!,
-            ),
-          );
+    return _isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme;
   }
 }

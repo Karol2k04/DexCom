@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../theme/app_theme.dart';
 
 // Ekran statystyk
 class StatisticsScreen extends StatelessWidget {
@@ -26,11 +27,11 @@ class StatisticsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Statistics',
+            '📊 Statistics',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.grey[900],
+              color: isDark ? AppTheme.white : AppTheme.darkBlue,
             ),
           ),
           const SizedBox(height: 4),
@@ -38,7 +39,7 @@ class StatisticsScreen extends StatelessWidget {
             'Last 7 days',
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              color: isDark ? Colors.grey[400] : AppTheme.darkGray,
             ),
           ),
           const SizedBox(height: 16),
@@ -49,12 +50,15 @@ class StatisticsScreen extends StatelessWidget {
               Expanded(
                 child: Card(
                   elevation: 0,
-                  color: isDark ? Colors.grey[850] : Colors.white,
+                  color: isDark ? AppTheme.darkCard : AppTheme.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        Icon(Icons.trending_up, color: Colors.green, size: 24),
+                        Text('🎯', style: TextStyle(fontSize: 24)),
                         const SizedBox(height: 8),
                         const Text(
                           '78%',
@@ -79,16 +83,15 @@ class StatisticsScreen extends StatelessWidget {
               Expanded(
                 child: Card(
                   elevation: 0,
-                  color: isDark ? Colors.grey[850] : Colors.white,
+                  color: isDark ? AppTheme.darkCard : AppTheme.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        Icon(
-                          Icons.calendar_today,
-                          color: Colors.blue,
-                          size: 24,
-                        ),
+                        Text('📈', style: TextStyle(fontSize: 24)),
                         const SizedBox(height: 8),
                         const Text(
                           '5',
@@ -113,12 +116,15 @@ class StatisticsScreen extends StatelessWidget {
               Expanded(
                 child: Card(
                   elevation: 0,
-                  color: isDark ? Colors.grey[850] : Colors.white,
+                  color: isDark ? AppTheme.darkCard : AppTheme.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        Icon(Icons.show_chart, color: Colors.purple, size: 24),
+                        Text('📊', style: TextStyle(fontSize: 24)),
                         const SizedBox(height: 8),
                         const Text(
                           '112',
@@ -146,7 +152,7 @@ class StatisticsScreen extends StatelessWidget {
           // Wykres słupkowy - średnie dzienne
           Card(
             elevation: 0,
-            color: isDark ? Colors.grey[850] : Colors.white,
+            color: isDark ? AppTheme.darkCard : AppTheme.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -160,7 +166,7 @@ class StatisticsScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.grey[900],
+                      color: isDark ? AppTheme.white : AppTheme.darkBlue,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -177,7 +183,7 @@ class StatisticsScreen extends StatelessWidget {
                             barRods: [
                               BarChartRodData(
                                 toY: entry.value['glucose'] as double,
-                                color: Colors.green,
+                                color: AppTheme.successGreen,
                                 width: 16,
                                 borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(4),

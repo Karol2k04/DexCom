@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/history_entry.dart';
+import '../theme/app_theme.dart';
+import '../widgets/glass_container.dart';
 
 // Ekran historii pomiarów
 class HistoryScreen extends StatefulWidget {
@@ -97,9 +99,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   ];
 
   Color getGlucoseColor(double value, String? alert) {
-    if (alert == 'low' || value < 70) return Colors.blue;
-    if (alert == 'high' || value > 140) return Colors.red;
-    return Colors.green;
+    if (alert == 'low' || value < 70) return AppTheme.lowRed;
+    if (alert == 'high' || value > 140) return AppTheme.dangerRed;
+    return AppTheme.successGreen;
   }
 
   IconData getTrendIcon(String trend) {
@@ -118,7 +120,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Measurement History',
+            '📋 Measurement History',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -159,15 +161,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
           // Lista historii
           ...mockHistory.map((entry) {
-            return Card(
-              elevation: 0,
-              color: isDark ? Colors.grey[850] : Colors.white,
-              margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GlassContainer(
                 padding: const EdgeInsets.all(16),
+                borderRadius: BorderRadius.circular(12),
+                blur: 6.0,
+                overlayColor: isDark
+                    ? Colors.white.withOpacity(0.03)
+                    : Colors.white.withOpacity(0.6),
                 child: Column(
                   children: [
                     Row(
@@ -177,13 +179,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              entry.time,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white : Colors.grey[900],
-                              ),
+                            Row(
+                              children: [
+                                Text('🕐', style: TextStyle(fontSize: 14)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  entry.time,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.grey[900],
+                                  ),
+                                ),
+                              ],
                             ),
                             Text(
                               entry.date,
@@ -202,34 +212,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
+                                horizontal: 12,
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
                                 color: getGlucoseColor(
                                   entry.glucose,
                                   entry.alert,
-                                ).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8),
+                                ).withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
                                 children: [
                                   Text(
+                                    AppTheme.getGlucoseStatusEmoji(
+                                      entry.glucose,
+                                    ),
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
                                     entry.glucose.toStringAsFixed(0),
                                     style: TextStyle(
-                                      fontSize: 24,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.bold,
-                                      color: getGlucoseColor(
-                                        entry.glucose,
-                                        entry.alert,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'mg/dL',
-                                    style: TextStyle(
-                                      fontSize: 12,
                                       color: getGlucoseColor(
                                         entry.glucose,
                                         entry.alert,
@@ -240,12 +246,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Icon(
-                              getTrendIcon(entry.trend),
-                              color: isDark
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
-                              size: 20,
+                            Text(
+                              entry.trend == 'up'
+                                  ? '📈'
+                                  : entry.trend == 'down'
+                                  ? '📉'
+                                  : '➡️',
+                              style: TextStyle(fontSize: 18),
                             ),
                           ],
                         ),
@@ -259,38 +266,56 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         child: Row(
                           children: [
                             if (entry.meal != null) ...[
-                              Icon(
-                                Icons.restaurant,
-                                size: 16,
-                                color: Colors.orange,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${entry.meal} ${entry.carbs != null ? "(${entry.carbs}g)" : ""}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text('🍽️', style: TextStyle(fontSize: 14)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${entry.meal}${entry.carbs != null ? " (${entry.carbs}g)" : ""}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.orange[700],
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                             if (entry.meal != null && entry.insulin != null)
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 12),
                             if (entry.insulin != null) ...[
-                              Icon(
-                                Icons.medical_services,
-                                size: 16,
-                                color: Colors.blue,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${entry.insulin}U insulin',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isDark
-                                      ? Colors.grey[400]
-                                      : Colors.grey[600],
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text('💉', style: TextStyle(fontSize: 14)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${entry.insulin}U',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.blue[700],
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],

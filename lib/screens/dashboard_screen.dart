@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/glucose_reading.dart';
+import '../theme/app_theme.dart';
+import '../widgets/glass_container.dart';
 
 // Ekran Dashboard - główny widok z aktualnym poziomem glukozy i wykresem
 class DashboardScreen extends StatelessWidget {
@@ -46,100 +48,141 @@ class DashboardScreen extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Card z aktualnym poziomem glukozy
-          Card(
-            elevation: 0,
-            color: isDark ? Colors.grey[850] : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Current Level',
-                        style: TextStyle(
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
-                          fontSize: 14,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.monitor_heart,
-                            color: Colors.green,
-                            size: 16,
+          // Card z aktualnym poziomem glukozy (glass)
+          GlassContainer(
+            padding: const EdgeInsets.all(24),
+            borderRadius: BorderRadius.circular(16),
+            blur: 6.0,
+            overlayColor: isDark
+                ? Colors.white.withOpacity(0.03)
+                : Colors.white.withOpacity(0.6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '📊 Current Level',
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.grey[400]
+                                : AppTheme.darkGray,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
-                          const SizedBox(width: 4),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.getGlucoseStatusColor(
+                          currentGlucose,
+                        ).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
                           Text(
-                            'Normal',
+                            AppTheme.getGlucoseStatusEmoji(currentGlucose),
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            AppTheme.getGlucoseStatusText(currentGlucose),
                             style: TextStyle(
-                              color: Colors.green,
+                              color: AppTheme.getGlucoseStatusColor(
+                                currentGlucose,
+                              ),
                               fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        currentGlucose.toStringAsFixed(0),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      currentGlucose.toStringAsFixed(0),
+                      style: TextStyle(
+                        fontSize: 64,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.getGlucoseStatusColor(currentGlucose),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12, bottom: 12),
+                      child: Text(
+                        'mg/dL',
                         style: TextStyle(
-                          fontSize: 56,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.grey[900],
+                          fontSize: 16,
+                          color: isDark ? Colors.grey[400] : AppTheme.darkGray,
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8, left: 8),
-                        child: Text(
-                          'mg/dL',
+                    ),
+                    const Spacer(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '📈 Stable',
                           style: TextStyle(
-                            fontSize: 20,
-                            color: isDark ? Colors.grey[400] : Colors.grey[500],
+                            fontSize: 14,
+                            color: AppTheme.successGreen,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.trending_up,
-                        size: 16,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Stable',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        const SizedBox(height: 4),
+                        Text(
+                          '🕐 2 min ago',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark ? Colors.grey[500] : Colors.grey[400],
+                          ),
                         ),
+                      ],
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.trending_up,
+                      size: 16,
+                      color: AppTheme.successGreen,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Stable',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.successGreen,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '• Updated 2 min ago',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.grey[500] : Colors.grey[400],
-                        ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '• Updated 2 min ago',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.grey[500] : Colors.grey[400],
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
@@ -147,160 +190,181 @@ class DashboardScreen extends StatelessWidget {
           // Szybkie statystyki
           Row(
             children: [
-              // Średnia 24h
+              // Średnia 24h (glass)
               Expanded(
-                child: Card(
-                  elevation: 0,
-                  color: isDark ? Colors.grey[850] : Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '24h Average',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                child: GlassContainer(
+                  padding: const EdgeInsets.all(16),
+                  borderRadius: BorderRadius.circular(16),
+                  blur: 6.0,
+                  overlayColor: isDark
+                      ? Colors.white.withOpacity(0.03)
+                      : Colors.white.withOpacity(0.6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text('📊', style: TextStyle(fontSize: 16)),
+                          const SizedBox(width: 8),
+                          Text(
+                            '24h Avg',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : AppTheme.darkGray,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        avgGlucose.toStringAsFixed(0),
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.getGlucoseStatusColor(avgGlucose),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          avgGlucose.toStringAsFixed(0),
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.grey[900],
-                          ),
+                      ),
+                      Text(
+                        'mg/dL',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: isDark ? Colors.grey[500] : Colors.grey[500],
                         ),
-                        Text(
-                          'mg/dL',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isDark ? Colors.grey[500] : Colors.grey[500],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(width: 12),
 
-              // TIR
+              // TIR (glass)
               Expanded(
-                child: Card(
-                  elevation: 0,
-                  color: isDark ? Colors.grey[850] : Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'TIR',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                child: GlassContainer(
+                  padding: const EdgeInsets.all(16),
+                  borderRadius: BorderRadius.circular(16),
+                  blur: 6.0,
+                  overlayColor: isDark
+                      ? Colors.white.withOpacity(0.03)
+                      : Colors.white.withOpacity(0.6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text('🎯', style: TextStyle(fontSize: 16)),
+                          const SizedBox(width: 8),
+                          Text(
+                            'TIR',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : AppTheme.darkGray,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '$timeInRange%',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.successGreen,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '$timeInRange%',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
+                      ),
+                      Text(
+                        'in range',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: isDark ? Colors.grey[500] : Colors.grey[500],
                         ),
-                        Text(
-                          'in range',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isDark ? Colors.grey[500] : Colors.grey[500],
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(width: 12),
 
-              // Epizody
+              // Epizody (glass)
               Expanded(
-                child: Card(
-                  elevation: 0,
-                  color: isDark ? Colors.grey[850] : Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Episodes',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                child: GlassContainer(
+                  padding: const EdgeInsets.all(16),
+                  borderRadius: BorderRadius.circular(16),
+                  blur: 6.0,
+                  overlayColor: isDark
+                      ? Colors.white.withOpacity(0.03)
+                      : Colors.white.withOpacity(0.6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text('⚠️', style: TextStyle(fontSize: 16)),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Episodes',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : AppTheme.darkGray,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Text(
-                              '$hypoEpisodes',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('🔴', style: TextStyle(fontSize: 12)),
+                                Text(
+                                  '$hypoEpisodes',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.lowRed,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              ' / ',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[400],
-                              ),
-                            ),
-                            Text(
-                              '$hyperEpisodes',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          'low/high',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isDark ? Colors.grey[500] : Colors.grey[500],
                           ),
-                        ),
-                      ],
-                    ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('⚡', style: TextStyle(fontSize: 12)),
+                                Text(
+                                  '$hyperEpisodes',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.dangerRed,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-
-          // Wykres glukozy
           Card(
             elevation: 0,
-            color: isDark ? Colors.grey[850] : Colors.white,
+            color: isDark ? AppTheme.darkCard : AppTheme.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -314,7 +378,7 @@ class DashboardScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.grey[900],
+                      color: isDark ? AppTheme.white : AppTheme.darkBlue,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -402,7 +466,7 @@ class DashboardScreen extends StatelessWidget {
                                 )
                                 .toList(),
                             isCurved: true,
-                            color: Colors.green,
+                            color: AppTheme.successGreen,
                             barWidth: 3,
                             dotData: FlDotData(
                               show: true,
@@ -411,9 +475,9 @@ class DashboardScreen extends StatelessWidget {
                                 if (glucoseData[index].meal != null) {
                                   return FlDotCirclePainter(
                                     radius: 6,
-                                    color: Colors.orange,
+                                    color: AppTheme.warningOrange,
                                     strokeWidth: 2,
-                                    strokeColor: Colors.white,
+                                    strokeColor: AppTheme.white,
                                   );
                                 }
                                 return FlDotCirclePainter(
@@ -424,7 +488,7 @@ class DashboardScreen extends StatelessWidget {
                             ),
                             belowBarData: BarAreaData(
                               show: true,
-                              color: Colors.green.withOpacity(0.1),
+                              color: AppTheme.successGreen.withOpacity(0.1),
                             ),
                           ),
                         ],
@@ -433,13 +497,13 @@ class DashboardScreen extends StatelessWidget {
                           horizontalLines: [
                             HorizontalLine(
                               y: 70,
-                              color: Colors.blue.withOpacity(0.5),
+                              color: AppTheme.lowRed.withOpacity(0.5),
                               strokeWidth: 1,
                               dashArray: [5, 5],
                             ),
                             HorizontalLine(
                               y: 140,
-                              color: Colors.red.withOpacity(0.5),
+                              color: AppTheme.dangerRed.withOpacity(0.5),
                               strokeWidth: 1,
                               dashArray: [5, 5],
                             ),

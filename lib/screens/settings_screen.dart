@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 // Ekran ustawień
 class SettingsScreen extends StatefulWidget {
@@ -29,11 +30,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Settings',
+            '⚙️ Settings',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : Colors.grey[900],
+              color: isDark ? AppTheme.white : AppTheme.darkBlue,
             ),
           ),
           const SizedBox(height: 4),
@@ -41,7 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Personalize your app',
             style: TextStyle(
               fontSize: 14,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              color: isDark ? Colors.grey[400] : AppTheme.darkGray,
             ),
           ),
           const SizedBox(height: 24),
@@ -49,7 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Zakres docelowy
           Card(
             elevation: 0,
-            color: isDark ? Colors.grey[850] : Colors.white,
+            color: isDark ? AppTheme.darkCard : AppTheme.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -60,14 +61,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.adjust, color: Colors.blue, size: 20),
+                      Text('🎯', style: TextStyle(fontSize: 20)),
                       const SizedBox(width: 8),
                       Text(
                         'Target Range',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : Colors.grey[900],
+                          color: isDark ? AppTheme.white : AppTheme.darkBlue,
                         ),
                       ),
                     ],
@@ -79,7 +80,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Lower limit',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      color: isDark ? Colors.grey[400] : AppTheme.darkGray,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -92,6 +93,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           max: 100,
                           divisions: 40,
                           label: targetMin.round().toString(),
+                          activeColor: AppTheme.successGreen,
                           onChanged: (value) {
                             setState(() {
                               targetMin = value;
@@ -106,7 +108,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           '${targetMin.round()} mg/dL',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            color: isDark ? Colors.white : Colors.grey[900],
+                            color: isDark ? AppTheme.white : AppTheme.darkBlue,
                           ),
                         ),
                       ),
@@ -119,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Upper limit',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      color: isDark ? Colors.grey[400] : AppTheme.darkGray,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -132,6 +134,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           max: 180,
                           divisions: 60,
                           label: targetMax.round().toString(),
+                          activeColor: AppTheme.warningOrange,
                           onChanged: (value) {
                             setState(() {
                               targetMax = value;
@@ -146,7 +149,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           '${targetMax.round()} mg/dL',
                           textAlign: TextAlign.right,
                           style: TextStyle(
-                            color: isDark ? Colors.white : Colors.grey[900],
+                            color: isDark ? AppTheme.white : AppTheme.darkBlue,
                           ),
                         ),
                       ),
@@ -157,7 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
+                      color: AppTheme.primaryBlue.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -167,13 +170,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           'Your target range',
                           style: TextStyle(
                             fontSize: 14,
-                            color: isDark ? Colors.grey[300] : Colors.grey[700],
+                            color: isDark
+                                ? Colors.grey[300]
+                                : AppTheme.darkGray,
                           ),
                         ),
                         Text(
                           '${targetMin.round()} - ${targetMax.round()} mg/dL',
                           style: const TextStyle(
-                            color: Colors.blue,
+                            color: AppTheme.primaryBlue,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -189,7 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Jednostki
           Card(
             elevation: 0,
-            color: isDark ? Colors.grey[850] : Colors.white,
+            color: isDark ? AppTheme.darkCard : AppTheme.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -198,13 +203,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Units',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.grey[900],
-                    ),
+                  Row(
+                    children: [
+                      Text('📏', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Units',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppTheme.white : AppTheme.darkBlue,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -218,15 +229,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: unit == 'mg/dL'
-                                ? Colors.blue
+                                ? AppTheme.primaryBlue
                                 : (isDark
                                       ? Colors.grey[700]
                                       : Colors.grey[200]),
                             foregroundColor: unit == 'mg/dL'
-                                ? Colors.white
+                                ? AppTheme.white
                                 : (isDark
                                       ? Colors.grey[300]
-                                      : Colors.grey[700]),
+                                      : AppTheme.darkGray),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -245,15 +256,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: unit == 'mmol/L'
-                                ? Colors.blue
+                                ? AppTheme.primaryBlue
                                 : (isDark
                                       ? Colors.grey[700]
                                       : Colors.grey[200]),
                             foregroundColor: unit == 'mmol/L'
-                                ? Colors.white
+                                ? AppTheme.white
                                 : (isDark
                                       ? Colors.grey[300]
-                                      : Colors.grey[700]),
+                                      : AppTheme.darkGray),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -273,7 +284,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Powiadomienia
           Card(
             elevation: 0,
-            color: isDark ? Colors.grey[850] : Colors.white,
+            color: isDark ? AppTheme.darkCard : AppTheme.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -284,21 +295,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.notifications, color: Colors.orange, size: 20),
+                      Text('🔔', style: TextStyle(fontSize: 20)),
                       const SizedBox(width: 8),
                       Text(
                         'Notifications',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : Colors.grey[900],
+                          color: isDark ? AppTheme.white : AppTheme.darkBlue,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   SwitchListTile(
-                    title: const Text('Low glucose level'),
+                    title: Row(
+                      children: [
+                        Text('🔴', style: TextStyle(fontSize: 16)),
+                        const SizedBox(width: 8),
+                        const Expanded(child: Text('Low glucose level')),
+                      ],
+                    ),
                     subtitle: const Text('Alert for hypoglycemia'),
                     value: notifications['low']!,
                     onChanged: (value) {
@@ -309,7 +326,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     contentPadding: EdgeInsets.zero,
                   ),
                   SwitchListTile(
-                    title: const Text('High glucose level'),
+                    title: Row(
+                      children: [
+                        Text('⚡', style: TextStyle(fontSize: 16)),
+                        const SizedBox(width: 8),
+                        const Expanded(child: Text('High glucose level')),
+                      ],
+                    ),
                     subtitle: const Text('Alert for hyperglycemia'),
                     value: notifications['high']!,
                     onChanged: (value) {

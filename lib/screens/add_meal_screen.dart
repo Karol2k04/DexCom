@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+import '../widgets/glass_container.dart';
 
 // Ekran dodawania posiłku
 class AddMealScreen extends StatefulWidget {
@@ -19,10 +21,30 @@ class _AddMealScreenState extends State<AddMealScreen> {
   bool showSuccess = false;
 
   final List<Map<String, dynamic>> mealIcons = [
-    {'icon': Icons.coffee, 'label': 'Breakfast', 'color': Colors.amber},
-    {'icon': Icons.soup_kitchen, 'label': 'Lunch', 'color': Colors.orange},
-    {'icon': Icons.dinner_dining, 'label': 'Dinner', 'color': Colors.red},
-    {'icon': Icons.apple, 'label': 'Snack', 'color': Colors.green},
+    {
+      'icon': Icons.coffee,
+      'emoji': '🍳',
+      'label': 'Breakfast',
+      'color': AppTheme.warningOrange,
+    },
+    {
+      'icon': Icons.soup_kitchen,
+      'emoji': '🍽️',
+      'label': 'Lunch',
+      'color': AppTheme.primaryBlue,
+    },
+    {
+      'icon': Icons.dinner_dining,
+      'emoji': '🍖',
+      'label': 'Dinner',
+      'color': AppTheme.dangerRed,
+    },
+    {
+      'icon': Icons.apple,
+      'emoji': '🍎',
+      'label': 'Snack',
+      'color': AppTheme.successGreen,
+    },
   ];
 
   @override
@@ -55,15 +77,27 @@ class _AddMealScreenState extends State<AddMealScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.green,
+                color: AppTheme.successGreen,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.successGreen.withOpacity(0.3),
+                    blurRadius: 16,
+                    spreadRadius: 4,
+                  ),
+                ],
               ),
-              child: const Icon(Icons.check, size: 48, color: Colors.white),
+              child: const Icon(Icons.check, size: 48, color: AppTheme.white),
             ),
             const SizedBox(height: 16),
             const Text(
-              'Meal saved!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              '✅ Meal saved!',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your meal has been recorded',
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -86,7 +120,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Add meal',
+                  '🍴 Add Meal',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -97,84 +131,102 @@ class _AddMealScreenState extends State<AddMealScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Typ posiłku
-            Card(
-              elevation: 0,
-              color: isDark ? Colors.grey[850] : Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Meal type',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      ),
+            // Typ posiłku (glass)
+            GlassContainer(
+              padding: const EdgeInsets.all(16),
+              borderRadius: BorderRadius.circular(16),
+              blur: 6.0,
+              overlayColor: isDark
+                  ? Colors.white.withOpacity(0.03)
+                  : Colors.white.withOpacity(0.6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Meal type',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.grey[400] : AppTheme.darkGray,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 12),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 4,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
+                  ),
+                  const SizedBox(height: 12),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                    itemCount: mealIcons.length,
+                    itemBuilder: (context, index) {
+                      final item = mealIcons[index];
+                      final isSelected = selectedIcon == index;
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedIcon = index;
+                          });
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? (item['color'] as Color).withOpacity(0.25)
+                                : (isDark
+                                      ? Colors.grey[700]
+                                      : Colors.grey[100]),
+                            borderRadius: BorderRadius.circular(16),
+                            border: isSelected
+                                ? Border.all(
+                                    color: item['color'] as Color,
+                                    width: 2.5,
+                                  )
+                                : null,
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: (item['color'] as Color)
+                                          .withOpacity(0.2),
+                                      blurRadius: 8,
+                                      spreadRadius: 2,
+                                    ),
+                                  ]
+                                : null,
                           ),
-                      itemCount: mealIcons.length,
-                      itemBuilder: (context, index) {
-                        final item = mealIcons[index];
-                        final isSelected = selectedIcon == index;
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedIcon = index;
-                            });
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? (item['color'] as Color).withOpacity(0.2)
-                                  : (isDark
-                                        ? Colors.grey[700]
-                                        : Colors.grey[100]),
-                              borderRadius: BorderRadius.circular(12),
-                              border: isSelected
-                                  ? Border.all(color: Colors.blue, width: 2)
-                                  : null,
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  item['icon'] as IconData,
-                                  color: item['color'] as Color,
-                                  size: 28,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                item['emoji'] as String,
+                                style: const TextStyle(fontSize: 28),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                item['label'] as String,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  item['label'] as String,
-                                  style: TextStyle(fontSize: 10),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
+
             const SizedBox(height: 16),
 
             // Nazwa posiłku
             Card(
               elevation: 0,
-              color: isDark ? Colors.grey[850] : Colors.white,
+              color: isDark ? AppTheme.darkCard : AppTheme.white,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -184,7 +236,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                       'Meal name',
                       style: TextStyle(
                         fontSize: 14,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        color: isDark ? Colors.grey[400] : AppTheme.darkGray,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -193,7 +245,9 @@ class _AddMealScreenState extends State<AddMealScreen> {
                       decoration: InputDecoration(
                         hintText: 'e.g. Oatmeal with fruits',
                         filled: true,
-                        fillColor: isDark ? Colors.grey[700] : Colors.grey[100],
+                        fillColor: isDark
+                            ? AppTheme.darkSurface
+                            : AppTheme.lightGray,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -215,7 +269,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
             // Węglowodany
             Card(
               elevation: 0,
-              color: isDark ? Colors.grey[850] : Colors.white,
+              color: isDark ? AppTheme.darkCard : AppTheme.white,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -225,7 +279,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
                       'Carbs (g)',
                       style: TextStyle(
                         fontSize: 14,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        color: isDark ? Colors.grey[400] : AppTheme.darkGray,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -235,7 +289,9 @@ class _AddMealScreenState extends State<AddMealScreen> {
                       decoration: InputDecoration(
                         hintText: 'e.g. 45',
                         filled: true,
-                        fillColor: isDark ? Colors.grey[700] : Colors.grey[100],
+                        fillColor: isDark
+                            ? AppTheme.darkSurface
+                            : AppTheme.lightGray,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -257,9 +313,12 @@ class _AddMealScreenState extends State<AddMealScreen> {
             // Czas
             Card(
               elevation: 0,
-              color: isDark ? Colors.grey[850] : Colors.white,
+              color: isDark ? AppTheme.darkCard : AppTheme.white,
               child: ListTile(
-                leading: Icon(Icons.access_time, color: Colors.blue),
+                leading: const Icon(
+                  Icons.access_time,
+                  color: AppTheme.primaryBlue,
+                ),
                 title: const Text('Time'),
                 subtitle: Text(selectedTime.format(context)),
                 onTap: () async {
@@ -281,15 +340,15 @@ class _AddMealScreenState extends State<AddMealScreen> {
             ElevatedButton(
               onPressed: handleSubmit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
+                backgroundColor: AppTheme.successGreen,
+                foregroundColor: AppTheme.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: const Text(
-                'Save  Meal',
+                'Save Meal',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
