@@ -1,9 +1,11 @@
+// screens/home_screen.dart - Combined version
 import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
 import 'history_screen.dart';
 import 'statistics_screen.dart';
 import 'add_meal_screen.dart';
 import 'settings_screen.dart';
+import 'food_scan_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 
@@ -27,9 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _screens = [
       DashboardScreen(onAddMeal: () => _navigateToAddMeal()),
-      HistoryScreen(),
+      const HistoryScreen(),
       AddMealScreen(onBack: () => _navigateBack()),
-      StatisticsScreen(),
+      const StatisticsScreen(),
       const SettingsScreen(),
     ];
   }
@@ -38,6 +40,13 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _currentIndex = 2;
     });
+  }
+
+  void _navigateToFoodScan() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FoodScanScreen()),
+    );
   }
 
   void _navigateBack() {
@@ -73,7 +82,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           actions: [
-            // Przycisk wylogowania
+            // Food Scan button
+            IconButton(
+              onPressed: _navigateToFoodScan,
+              icon: const Icon(Icons.camera_alt),
+              tooltip: 'Scan Food',
+              color: AppTheme.successGreen,
+            ),
+            // Sign Out button
             IconButton(
               onPressed: () async {
                 // Wylogowanie z Firebase
@@ -86,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               tooltip: 'Sign Out',
             ),
-            // Przycisk dark/light mode
+            // Dark/Light mode toggle
             IconButton(
               onPressed: _toggleTheme,
               icon: Icon(
@@ -115,85 +131,40 @@ class _HomeScreenState extends State<HomeScreen> {
           showSelectedLabels: true,
           showUnselectedLabels: true,
           type: BottomNavigationBarType.fixed,
-          items: [
+          items: const [
             BottomNavigationBarItem(
-              icon: const Text('📊', style: TextStyle(fontSize: 20)),
+              icon: Text('📊', style: TextStyle(fontSize: 20)),
               label: 'Dashboard',
             ),
             BottomNavigationBarItem(
-              icon: const Text('📋', style: TextStyle(fontSize: 20)),
+              icon: Text('📋', style: TextStyle(fontSize: 20)),
               label: 'History',
             ),
             BottomNavigationBarItem(
-              icon: const Text('🍽️', style: TextStyle(fontSize: 20)),
+              icon: Text('🍽️', style: TextStyle(fontSize: 20)),
               label: 'Add Meal',
             ),
             BottomNavigationBarItem(
-              icon: const Text('📈', style: TextStyle(fontSize: 20)),
+              icon: Text('📈', style: TextStyle(fontSize: 20)),
               label: 'Statistics',
             ),
             BottomNavigationBarItem(
-              icon: const Text('⚙️', style: TextStyle(fontSize: 20)),
+              icon: Text('⚙️', style: TextStyle(fontSize: 20)),
               label: 'Settings',
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // Przycisk nawigacji
-  Widget _buildNavButton({
-    required int index,
-    required IconData icon,
-    required String emoji,
-    required String label,
-  }) {
-    final isSelected = _currentIndex == index;
-    final color = isSelected
-        ? AppTheme.primaryBlue
-        : (_isDarkMode ? Colors.grey[400] : AppTheme.darkGray);
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-          ],
+        floatingActionButton: FloatingActionButton(
+          onPressed: _navigateToFoodScan,
+          backgroundColor: AppTheme.successGreen,
+          tooltip: 'Scan Food',
+          child: const Icon(
+            Icons.camera_alt,
+            size: 28,
+            color: AppTheme.white,
+          ),
         ),
-      ),
-    );
-  }
-
-  // Centralny FAB (Floating Action Button)
-  Widget _buildCenterFAB() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      child: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _currentIndex = 2;
-          });
-        },
-        backgroundColor: AppTheme.successGreen,
-        elevation: 4,
-        child: const Icon(Icons.add, size: 32, color: AppTheme.white),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       ),
     );
   }
