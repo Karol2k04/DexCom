@@ -1,1 +1,41 @@
-{"firestore":{"database":"(default)","location":"eur3","rules":"firestore.rules","indexes":"firestore.indexes.json"},"flutter":{"platforms":{"android":{"default":{"projectId":"dexcom-f4d1b","appId":"1:701912503570:android:4e8df4ce8fd7ff21ba8fcb","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"dexcom-f4d1b","configurations":{"android":"1:701912503570:android:4e8df4ce8fd7ff21ba8fcb","ios":"1:701912503570:ios:7ed5513793112f37ba8fcb","macos":"1:701912503570:ios:7ed5513793112f37ba8fcb","web":"1:701912503570:web:c937e0cbf637acf4ba8fcb","windows":"1:701912503570:web:620fa2cae0d017e1ba8fcb"}}}}}}
+{
+  "firestore": {
+    "database": "(default)",
+    "location": "eur3",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": {
+    "source": "functions",
+    "codebase": "default",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log"
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "dexcom-f4d1b",
+          "appId": "1:701912503570:android:4e8df4ce8fd7ff21ba8fcb",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "dexcom-f4d1b",
+          "configurations": {
+            "android": "1:701912503570:android:4e8df4ce8fd7ff21ba8fcb",
+            "ios": "1:701912503570:ios:7ed5513793112f37ba8fcb",
+            "macos": "1:701912503570:ios:7ed5513793112f37ba8fcb",
+            "web": "1:701912503570:web:c937e0cbf637acf4ba8fcb",
+            "windows": "1:701912503570:web:620fa2cae0d017e1ba8fcb"
+          }
+        }
+      }
+    }
+  }
+}
