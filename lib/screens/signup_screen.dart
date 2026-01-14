@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../theme/app_theme.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -63,21 +64,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.grey[900] : Colors.grey[50],
+      backgroundColor: isDark ? AppTheme.darkBackground : AppTheme.lightGray,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: isDark ? Colors.grey[850] : Colors.white,
+        backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.white,
         leading: IconButton(
           icon: Icon(
             Icons.arrow_back,
-            color: isDark ? Colors.grey[400] : Colors.grey[700],
+            color: isDark ? Colors.grey[400] : AppTheme.darkGray,
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           'Create Account',
           style: TextStyle(
-            color: Colors.blue[600],
+            color: AppTheme.primaryBlue,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -94,7 +95,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Nagłówek
-                  Icon(Icons.person_add, size: 80, color: Colors.blue[600]),
+                  Icon(Icons.person_add, size: 80, color: AppTheme.primaryBlue),
                   const SizedBox(height: 24),
                   Text(
                     'Join DexCom',
@@ -102,7 +103,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.grey[900],
+                      color: isDark ? AppTheme.white : AppTheme.darkBlue,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -111,14 +112,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      color: isDark ? Colors.grey[400] : AppTheme.darkGray,
                     ),
                   ),
                   const SizedBox(height: 40),
 
                   // Card z formularzem
                   Card(
-                    elevation: 2,
+                    elevation: 0,
+                    color: isDark ? AppTheme.darkCard : AppTheme.white,
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
@@ -130,11 +132,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             decoration: InputDecoration(
                               labelText: 'Email',
                               hintText: 'your.email@example.com',
-                              prefixIcon: Icon(
+                              prefixIcon: const Icon(
                                 Icons.email_outlined,
-                                color: Colors.blue[600],
+                                color: AppTheme.primaryBlue,
                               ),
-                              border: const OutlineInputBorder(),
+                              filled: true,
+                              fillColor: isDark
+                                  ? AppTheme.darkSurface
+                                  : AppTheme.lightGray,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.primaryBlue,
+                                  width: 2,
+                                ),
+                              ),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -155,9 +171,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             decoration: InputDecoration(
                               labelText: 'Password',
                               hintText: 'Minimum 6 characters',
-                              prefixIcon: Icon(
+                              prefixIcon: const Icon(
                                 Icons.lock_outline,
-                                color: Colors.blue[600],
+                                color: AppTheme.primaryBlue,
                               ),
                               suffixIcon: IconButton(
                                 icon: Icon(
@@ -171,7 +187,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   });
                                 },
                               ),
-                              border: const OutlineInputBorder(),
+                              filled: true,
+                              fillColor: isDark
+                                  ? AppTheme.darkSurface
+                                  : AppTheme.lightGray,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.primaryBlue,
+                                  width: 2,
+                                ),
+                              ),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -192,9 +222,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             decoration: InputDecoration(
                               labelText: 'Confirm Password',
                               hintText: 'Re-enter password',
-                              prefixIcon: Icon(
+                              prefixIcon: const Icon(
                                 Icons.lock_outline,
-                                color: Colors.blue[600],
+                                color: AppTheme.primaryBlue,
                               ),
                               suffixIcon: IconButton(
                                 icon: Icon(
@@ -209,7 +239,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   });
                                 },
                               ),
-                              border: const OutlineInputBorder(),
+                              filled: true,
+                              fillColor: isDark
+                                  ? AppTheme.darkSurface
+                                  : AppTheme.lightGray,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: AppTheme.primaryBlue,
+                                  width: 2,
+                                ),
+                              ),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -230,8 +274,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             child: ElevatedButton(
                               onPressed: _isLoading ? null : _handleSignUp,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue[600],
-                                foregroundColor: Colors.white,
+                                backgroundColor: AppTheme.successGreen,
+                                foregroundColor: AppTheme.white,
                               ),
                               child: _isLoading
                                   ? const SizedBox(
@@ -239,7 +283,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                       width: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        color: Colors.white,
+                                        color: AppTheme.white,
                                       ),
                                     )
                                   : const Text(
@@ -264,15 +308,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Text(
                         'Already have an account? ',
                         style: TextStyle(
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          color: isDark ? Colors.grey[400] : AppTheme.darkGray,
                         ),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: Text(
+                        child: const Text(
                           'Sign In',
                           style: TextStyle(
-                            color: Colors.blue[600],
+                            color: AppTheme.primaryBlue,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

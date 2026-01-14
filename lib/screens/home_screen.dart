@@ -1,10 +1,13 @@
+// screens/home_screen.dart - Combined version
 import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
 import 'history_screen.dart';
 import 'statistics_screen.dart';
 import 'add_meal_screen.dart';
 import 'settings_screen.dart';
+import 'food_scan_screen.dart';
 import '../services/auth_service.dart';
+import '../theme/app_theme.dart';
 
 // Główny ekran aplikacji z bottom navigation
 class HomeScreen extends StatefulWidget {
@@ -26,9 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _screens = [
       DashboardScreen(onAddMeal: () => _navigateToAddMeal()),
-      HistoryScreen(),
+      const HistoryScreen(),
       AddMealScreen(onBack: () => _navigateBack()),
-      StatisticsScreen(),
+      const StatisticsScreen(),
       const SettingsScreen(),
     ];
   }
@@ -37,6 +40,13 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _currentIndex = 2;
     });
+  }
+
+  void _navigateToFoodScan() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const FoodScanScreen()),
+    );
   }
 
   void _navigateBack() {
@@ -55,51 +65,49 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.light(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.light(
-          primary: Colors.blue[600]!,
-          secondary: Colors.green[600]!,
-        ),
-      ),
-      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.dark(
-          primary: Colors.blue[400]!,
-          secondary: Colors.green[400]!,
-        ),
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: Scaffold(
         // AppBar z tytułem i przyciskiem motywu
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: _isDarkMode ? Colors.grey[850] : Colors.white,
-          title: Text(
-            'DexCom',
+          backgroundColor: _isDarkMode ? AppTheme.darkSurface : AppTheme.white,
+          title: const Text(
+            '🩺 DexCom',
             style: TextStyle(
-              color: Colors.blue[600],
+              color: AppTheme.primaryBlue,
               fontWeight: FontWeight.bold,
+              fontSize: 20,
             ),
           ),
           actions: [
-            // Przycisk wylogowania
+            // Food Scan button
+            IconButton(
+              onPressed: _navigateToFoodScan,
+              icon: const Icon(Icons.camera_alt),
+              tooltip: 'Scan Food',
+              color: AppTheme.successGreen,
+            ),
+            // Sign Out button
             IconButton(
               onPressed: () async {
                 // Wylogowanie z Firebase
                 await AuthService().signOut();
-                // Nawigacja obs\u0142ugiwana przez StreamBuilder w MyApp
+                // Nawigacja obsługiwana przez StreamBuilder w MyApp
               },
               icon: Icon(
                 Icons.logout,
-                color: _isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                color: _isDarkMode ? AppTheme.lightGray : AppTheme.darkGray,
               ),
               tooltip: 'Sign Out',
             ),
-            // Przycisk dark/light mode
+            // Dark/Light mode toggle
             IconButton(
               onPressed: _toggleTheme,
               icon: Icon(
                 _isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                color: _isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                color: _isDarkMode ? AppTheme.lightGray : AppTheme.darkGray,
               ),
               tooltip: _isDarkMode ? 'Light Mode' : 'Dark Mode',
             ),
@@ -108,102 +116,55 @@ class _HomeScreenState extends State<HomeScreen> {
         // Zawartość - aktualny ekran
         body: IndexedStack(index: _currentIndex, children: _screens),
         // Bottom Navigation Bar
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: _isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
-                width: 1,
-              ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          backgroundColor: _isDarkMode ? AppTheme.darkSurface : AppTheme.white,
+          selectedItemColor: AppTheme.primaryBlue,
+          unselectedItemColor: _isDarkMode
+              ? Colors.grey[400]
+              : AppTheme.darkGray,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Text('📊', style: TextStyle(fontSize: 20)),
+              label: 'Dashboard',
             ),
-          ),
-          child: BottomAppBar(
-            color: _isDarkMode ? Colors.grey[850] : Colors.white,
-            elevation: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                // Dashboard
-                _buildNavButton(index: 0, icon: Icons.home, label: 'Dashboard'),
-                // Historia
-                _buildNavButton(
-                  index: 1,
-                  icon: Icons.history,
-                  label: 'History',
-                ),
-                // Dodaj posiłek (FAB)
-                _buildCenterFAB(),
-                // Statystyki
-                _buildNavButton(
-                  index: 3,
-                  icon: Icons.bar_chart,
-                  label: 'Statistics',
-                ),
-                // Ustawienia
-                _buildNavButton(
-                  index: 4,
-                  icon: Icons.settings,
-                  label: 'Settings',
-                ),
-              ],
+            BottomNavigationBarItem(
+              icon: Text('📋', style: TextStyle(fontSize: 20)),
+              label: 'History',
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Przycisk nawigacji
-  Widget _buildNavButton({
-    required int index,
-    required IconData icon,
-    required String label,
-  }) {
-    final isSelected = _currentIndex == index;
-    final color = isSelected
-        ? Colors.blue
-        : (_isDarkMode ? Colors.grey[400] : Colors.grey[500]);
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
+            BottomNavigationBarItem(
+              icon: Text('🍽️', style: TextStyle(fontSize: 20)),
+              label: 'Add Meal',
+            ),
+            BottomNavigationBarItem(
+              icon: Text('📈', style: TextStyle(fontSize: 20)),
+              label: 'Statistics',
+            ),
+            BottomNavigationBarItem(
+              icon: Text('⚙️', style: TextStyle(fontSize: 20)),
+              label: 'Settings',
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // Centralny FAB (Floating Action Button)
-  Widget _buildCenterFAB() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      child: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _currentIndex = 2;
-          });
-        },
-        backgroundColor: Colors.blue[600],
-        elevation: 4,
-        child: const Icon(Icons.add, size: 32, color: Colors.white),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _navigateToFoodScan,
+          backgroundColor: AppTheme.successGreen,
+          tooltip: 'Scan Food',
+          child: const Icon(
+            Icons.camera_alt,
+            size: 28,
+            color: AppTheme.white,
+          ),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       ),
     );
   }

@@ -1,66 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/signup_screen.dart';
 import 'services/auth_service.dart';
+import 'providers/glucose_provider.dart';
+import 'theme/app_theme.dart';
 
-// Punkt wejścia aplikacji - uruchamia główny widget
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
-// Główny widget aplikacji - bezstanowy (stateless)
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'DexCom',
-      // Wyłączenie bannera debug w prawym górnym rogu
-      debugShowCheckedModeBanner: false,
-      // Motyw aplikacji z niebieskim kolorem głównym (jak reszta aplikacji)
-      theme: ThemeData.light(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.light(
-          primary: Colors.blue[600]!,
-          secondary: Colors.green[600]!,
-        ),
-      ),
-      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.dark(
-          primary: Colors.blue[400]!,
-          secondary: Colors.green[400]!,
-        ),
-      ),
-      // Używamy StreamBuilder do obsługi stanu zalogowania
-      home: StreamBuilder<User?>(
-        stream: AuthService().authStateChanges,
-        builder: (context, snapshot) {
-          // Ładowanie
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => GlucoseProvider()),
+      ],
+      child: MaterialApp(
+        title: 'DexCom',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
+        home: StreamBuilder<User?>(
+          stream: AuthService().authStateChanges,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-          // Jeśli użytkownik jest zalogowany - pokaż HomeScreen
-          if (snapshot.hasData) {
-            return const HomeScreen();
-          }
+            if (snapshot.hasData) {
+              return const HomeScreen();
+            }
 
-          // Jeśli niezalogowany - pokaż LoginPage
-          return const LoginPage();
-        },
+            return const LoginPage();
+          },
+        ),
       ),
     );
   }
 }
 
-// Wrapper dla LoginPage do eksportu
 class LoginPageWrapper extends StatelessWidget {
   const LoginPageWrapper({super.key});
 
@@ -70,7 +60,6 @@ class LoginPageWrapper extends StatelessWidget {
   }
 }
 
-// Widget strony logowania - stanowy (stateful) dla zarządzania stanem formularza
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -79,31 +68,20 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Kontrolery tekstowe do zarządzania wartościami w polach login i hasło
   final TextEditingController _loginController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  // Klucz formularza do walidacji danych
   final _formKey = GlobalKey<FormState>();
-
-  // Stan motywu (dark/light)
-  bool _isDarkMode = false;
-
-  // Stan ładowania
-  bool _isLoading = false;
-
-  // Instancja serwisu autentykacji
   final AuthService _authService = AuthService();
+  bool _isLoading = false;
+  bool _isDarkMode = false;
 
   @override
   void dispose() {
-    // Zwolnienie zasobów kontrolerów po zamknięciu widoku
     _loginController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  // Funkcja obsługi logowania standardowego
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
@@ -113,7 +91,6 @@ class _LoginPageState extends State<LoginPage> {
           email: _loginController.text.trim(),
           password: _passwordController.text,
         );
-        // Nawigacja obsługiwana przez StreamBuilder w MyApp
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -128,13 +105,11 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // Funkcja obsługi logowania przez Google
   Future<void> _handleGoogleLogin() async {
     setState(() => _isLoading = true);
 
     try {
       await _authService.signInWithGoogle();
-      // Nawigacja obsługiwana przez StreamBuilder w MyApp
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -148,7 +123,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // Funkcja obsługi przycisku rejestracji
   void _handleSignUp() {
     Navigator.push(
       context,
@@ -156,12 +130,11 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // Funkcja obsługi przycisku przypomnij hasło
   Future<void> _handleForgotPassword() async {
     if (_loginController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Wprowadź email, aby zresetować hasło'),
+          content: Text('Enter email to reset password'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -173,7 +146,7 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Wysłano link do resetowania hasła'),
+            content: Text('Password reset link sent'),
             backgroundColor: Colors.green,
           ),
         );
@@ -189,32 +162,20 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = _isDarkMode;
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.light(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.light(
-          primary: Colors.blue[600]!,
-          secondary: Colors.green[600]!,
-        ),
-      ),
-      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.dark(
-          primary: Colors.blue[400]!,
-          secondary: Colors.green[400]!,
-        ),
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: Scaffold(
-        backgroundColor: isDark ? Colors.grey[900] : Colors.grey[50],
+        backgroundColor: _isDarkMode ? AppTheme.darkBackground : AppTheme.lightGray,
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: isDark ? Colors.grey[850] : Colors.white,
-          title: Text(
+          backgroundColor: _isDarkMode ? AppTheme.darkSurface : AppTheme.white,
+          title: const Text(
             'DexCom',
             style: TextStyle(
-              color: Colors.blue[600],
+              color: AppTheme.primaryBlue,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -227,7 +188,7 @@ class _LoginPageState extends State<LoginPage> {
               },
               icon: Icon(
                 _isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                color: _isDarkMode ? AppTheme.lightGray : AppTheme.darkGray,
               ),
             ),
           ],
@@ -243,14 +204,13 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Logo/Nazwa firmy
                     Text(
                       'Welcome to DexCom',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : Colors.grey[900],
+                        color: _isDarkMode ? AppTheme.white : AppTheme.darkBlue,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -259,15 +219,13 @@ class _LoginPageState extends State<LoginPage> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
-                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        color: _isDarkMode ? Colors.grey[400] : AppTheme.darkGray,
                       ),
                     ),
                     const SizedBox(height: 40),
-
-                    // Card z polami logowania
                     Card(
                       elevation: 0,
-                      color: isDark ? Colors.grey[850] : Colors.white,
+                      color: _isDarkMode ? AppTheme.darkCard : AppTheme.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -275,28 +233,27 @@ class _LoginPageState extends State<LoginPage> {
                         padding: const EdgeInsets.all(24),
                         child: Column(
                           children: [
-                            // Pole Login
                             TextFormField(
                               controller: _loginController,
                               decoration: InputDecoration(
                                 labelText: 'Email',
                                 hintText: 'Enter your email',
-                                prefixIcon: Icon(
+                                prefixIcon: const Icon(
                                   Icons.person,
-                                  color: Colors.blue[600],
+                                  color: AppTheme.primaryBlue,
                                 ),
                                 filled: true,
-                                fillColor: isDark
-                                    ? Colors.grey[700]
-                                    : Colors.grey[100],
+                                fillColor: _isDarkMode
+                                    ? AppTheme.darkSurface
+                                    : AppTheme.lightGray,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.blue[600]!,
+                                  borderSide: const BorderSide(
+                                    color: AppTheme.primaryBlue,
                                     width: 2,
                                   ),
                                 ),
@@ -309,30 +266,28 @@ class _LoginPageState extends State<LoginPage> {
                               },
                             ),
                             const SizedBox(height: 20),
-
-                            // Pole Password
                             TextFormField(
                               controller: _passwordController,
                               obscureText: true,
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 hintText: 'Enter your password',
-                                prefixIcon: Icon(
+                                prefixIcon: const Icon(
                                   Icons.lock,
-                                  color: Colors.blue[600],
+                                  color: AppTheme.primaryBlue,
                                 ),
                                 filled: true,
-                                fillColor: isDark
-                                    ? Colors.grey[700]
-                                    : Colors.grey[100],
+                                fillColor: _isDarkMode
+                                    ? AppTheme.darkSurface
+                                    : AppTheme.lightGray,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.blue[600]!,
+                                  borderSide: const BorderSide(
+                                    color: AppTheme.primaryBlue,
                                     width: 2,
                                   ),
                                 ),
@@ -349,13 +304,11 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    // Przycisk Login
                     ElevatedButton(
                       onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[600],
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppTheme.primaryBlue,
+                        foregroundColor: AppTheme.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -369,7 +322,7 @@ class _LoginPageState extends State<LoginPage> {
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                                  AppTheme.white,
                                 ),
                               ),
                             )
@@ -382,13 +335,13 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Separator "LUB"
                     Row(
                       children: [
                         Expanded(
                           child: Divider(
-                            color: isDark ? Colors.grey[700] : Colors.grey[300],
+                            color: _isDarkMode
+                                ? Colors.grey[700]
+                                : AppTheme.mediumGray,
                             thickness: 1,
                           ),
                         ),
@@ -397,24 +350,24 @@ class _LoginPageState extends State<LoginPage> {
                           child: Text(
                             'OR',
                             style: TextStyle(
-                              color: isDark
+                              color: _isDarkMode
                                   ? Colors.grey[400]
-                                  : Colors.grey[600],
+                                  : AppTheme.darkGray,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
                         Expanded(
                           child: Divider(
-                            color: isDark ? Colors.grey[700] : Colors.grey[300],
+                            color: _isDarkMode
+                                ? Colors.grey[700]
+                                : AppTheme.mediumGray,
                             thickness: 1,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
-
-                    // Przycisk Login with Google
                     OutlinedButton.icon(
                       onPressed: _isLoading ? null : _handleGoogleLogin,
                       icon: const Icon(Icons.g_mobiledata, size: 32),
@@ -426,34 +379,34 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: isDark
-                            ? Colors.grey[300]
-                            : Colors.grey[700],
-                        backgroundColor: isDark
-                            ? Colors.grey[850]
-                            : Colors.white,
+                        foregroundColor: _isDarkMode
+                            ? AppTheme.white
+                            : AppTheme.darkGray,
+                        backgroundColor: _isDarkMode
+                            ? AppTheme.darkCard
+                            : AppTheme.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         side: BorderSide(
-                          color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                          color: _isDarkMode
+                              ? Colors.grey[700]!
+                              : AppTheme.mediumGray,
                           width: 1.5,
                         ),
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    // Dolne opcje: Sign Up i Forgot Password
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
                           onPressed: _handleSignUp,
-                          child: Text(
+                          child: const Text(
                             'Create Account',
                             style: TextStyle(
-                              color: Colors.blue[600],
+                              color: AppTheme.primaryBlue,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
@@ -461,10 +414,10 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         TextButton(
                           onPressed: _handleForgotPassword,
-                          child: Text(
+                          child: const Text(
                             'Forgot Password?',
                             style: TextStyle(
-                              color: Colors.blue[600],
+                              color: AppTheme.primaryBlue,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
