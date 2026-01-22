@@ -7,10 +7,12 @@ import '../models/csv_data_entry.dart';
 import '../models/history_entry.dart';
 import '../services/dexcom_service.dart';
 import '../services/csv_import_service.dart';
+import '../services/firestore_service.dart';
 
 class GlucoseProvider with ChangeNotifier {
   final DexcomService _dexcomService = DexcomService();
   final CsvImportService _csvService = CsvImportService();
+  final FirestoreService _firestoreService = FirestoreService();
 
   List<GlucoseReading> _glucoseData = [];
   List<GlucoseReading> get glucoseData => _glucoseData;
@@ -55,7 +57,7 @@ class GlucoseProvider with ChangeNotifier {
     );
   }
 
-  /// Import glucose data from CSV file
+  /// Import glucose data from CSV file and save to Firestore
   Future<void> importFromCsv(Uint8List fileBytes, String fileName) async {
     _isLoading = true;
     _errorMessage = null;
@@ -64,18 +66,31 @@ class GlucoseProvider with ChangeNotifier {
     try {
       debugPrint('Importing CSV file: $fileName');
 
-      // Parse CSV to get glucose readings
+      // 1. Parse CSV to get glucose readings
       final readings = await _csvService.parseDexcomCsv(fileBytes);
 
       if (readings.isEmpty) {
         throw Exception('No glucose readings found in CSV file');
       }
 
+      // 2. Save to Firestore
+      try {
+        final importId = await _firestoreService.saveGlucoseReadingsFromCsv(
+          readings: readings,
+          fileName: fileName,
+        );
+        debugPrint('✅ Saved to Firestore with importId: $importId');
+      } catch (firestoreError) {
+        debugPrint('⚠️ Firestore save failed: $firestoreError');
+        // Continue with local storage even if Firestore fails
+      }
+
+      // 3. Update local state
       _glucoseData = readings;
       _dataSource = 'csv';
       _isConnected = false;
 
-      // Create history entries from the import using actual timestamps from CSV
+      // 4. Create history entries from the import using actual timestamps from CSV
       _historyEntries.clear();
       for (var reading in readings) {
         final readingTime = DateTime.fromMillisecondsSinceEpoch(
@@ -124,6 +139,83 @@ class GlucoseProvider with ChangeNotifier {
       _errorMessage = 'Failed to import CSV: $e';
       debugPrint('CSV import error: $e');
       rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Load data from Firestore on app start (after login)
+  Future<void> loadDataFromFirestore() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      debugPrint('Loading data from Firestore...');
+
+      // Check if user has any data
+      final hasData = await _firestoreService.hasExistingData();
+      if (!hasData) {
+        debugPrint('No data found in Firestore');
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+
+      // Load all glucose readings
+      final readings = await _firestoreService.getAllGlucoseReadings();
+      debugPrint('Loaded ${readings.length} readings from Firestore');
+
+      _glucoseData = readings;
+      _dataSource = 'csv';
+
+      // Create history entries
+      _historyEntries.clear();
+      for (var reading in readings) {
+        final readingTime = DateTime.fromMillisecondsSinceEpoch(
+          reading.timestamp,
+        );
+
+        final timeStr =
+            '${readingTime.hour.toString().padLeft(2, '0')}:${readingTime.minute.toString().padLeft(2, '0')}';
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final yesterday = today.subtract(const Duration(days: 1));
+        final readingDate = DateTime(
+          readingTime.year,
+          readingTime.month,
+          readingTime.day,
+        );
+
+        String dateStr;
+        if (readingDate == today) {
+          dateStr = 'Today';
+        } else if (readingDate == yesterday) {
+          dateStr = 'Yesterday';
+        } else {
+          dateStr =
+              '${readingTime.month.toString().padLeft(2, '0')}-${readingTime.day.toString().padLeft(2, '0')}';
+        }
+
+        final entry = HistoryEntry(
+          id: reading.timestamp.toString(),
+          time: timeStr,
+          date: dateStr,
+          glucose: reading.value,
+          trend: _calculateTrend(reading.value),
+          timestamp: readingTime,
+        );
+        _historyEntries.add(entry);
+      }
+
+      _historyEntries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+      debugPrint('✅ Successfully loaded data from Firestore');
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Failed to load data from Firestore: $e';
+      debugPrint('❌ Firestore load error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

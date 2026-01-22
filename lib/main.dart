@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/signup_screen.dart';
 import 'services/auth_service.dart';
+import 'services/firestore_service.dart';
 import 'providers/glucose_provider.dart';
 import 'theme/app_theme.dart';
 
@@ -21,9 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => GlucoseProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => GlucoseProvider())],
       child: MaterialApp(
         title: 'DexCom',
         debugShowCheckedModeBanner: false,
@@ -40,6 +39,9 @@ class MyApp extends StatelessWidget {
             }
 
             if (snapshot.hasData) {
+              // User is logged in - initialize profile and load data
+              final user = snapshot.data!;
+              _initializeUserData(context, user);
               return const HomeScreen();
             }
 
@@ -48,6 +50,25 @@ class MyApp extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Initialize user profile and load data from Firestore
+  void _initializeUserData(BuildContext context, User user) async {
+    final firestoreService = FirestoreService();
+    final glucoseProvider = Provider.of<GlucoseProvider>(
+      context,
+      listen: false,
+    );
+
+    try {
+      // Initialize user profile in Firestore (creates if doesn't exist)
+      await firestoreService.initializeUserProfile(user);
+
+      // Load existing data from Firestore
+      await glucoseProvider.loadDataFromFirestore();
+    } catch (e) {
+      debugPrint('Error initializing user data: $e');
+    }
   }
 }
 
@@ -168,7 +189,9 @@ class _LoginPageState extends State<LoginPage> {
       darkTheme: AppTheme.darkTheme,
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: Scaffold(
-        backgroundColor: _isDarkMode ? AppTheme.darkBackground : AppTheme.lightGray,
+        backgroundColor: _isDarkMode
+            ? AppTheme.darkBackground
+            : AppTheme.lightGray,
         appBar: AppBar(
           elevation: 0,
           backgroundColor: _isDarkMode ? AppTheme.darkSurface : AppTheme.white,
@@ -219,7 +242,9 @@ class _LoginPageState extends State<LoginPage> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
-                        color: _isDarkMode ? Colors.grey[400] : AppTheme.darkGray,
+                        color: _isDarkMode
+                            ? Colors.grey[400]
+                            : AppTheme.darkGray,
                       ),
                     ),
                     const SizedBox(height: 40),
