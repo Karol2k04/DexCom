@@ -2,8 +2,14 @@
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:http/http.dart' as http;
+
+// Import your API key file
+import 'api_key.dart'; 
+
+// -------------------- MODELS --------------------
 
 class NutritionalInfo {
   final String foodName;
@@ -41,20 +47,6 @@ class NutritionalInfo {
       servingUnit: json['serving_unit'] ?? 'g',
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'food_name': foodName,
-      'calories': calories,
-      'carbohydrates': carbs,
-      'protein': protein,
-      'fat': fat,
-      'fiber': fiber,
-      'sugar': sugar,
-      'serving_size': servingSize,
-      'serving_unit': servingUnit,
-    };
-  }
 }
 
 class GlucosePrediction {
@@ -73,19 +65,24 @@ class GlucosePrediction {
   });
 }
 
-class NutriVisionService {
-  static const String _apiKey = 'nv_b34dd65dbbe0af81cab07c5cb606db62a94c83866c77824ad14c7a7895906fe8';
-  static const String _baseUrl = 'https://nutrivision.com/api/v1';
+// -------------------- SERVICE --------------------
 
-  /// Analyze food image and get nutritional information (for mobile/desktop)
+class NutriVisionService {
+  
+  // Initialize model using the key from api_key.dart
+  final GenerativeModel _model = GenerativeModel(
+    model: 'gemini-2.0-flash',
+    apiKey: googleGeminiApiKey, // <--- Using the imported constant here
+    generationConfig: GenerationConfig(
+      responseMimeType: 'application/json',
+    ),
+  );
+
+  /// Analyze food image from File (Mobile/Desktop)
   Future<NutritionalInfo> analyzeFoodImage(File imageFile) async {
     try {
-      debugPrint('Analyzing food image with NutriVision API');
-      
-      // Read image as bytes
+      debugPrint('Analyzing food image file with Gemini...');
       final bytes = await imageFile.readAsBytes();
-      
-      // Convert to base64
       return await analyzeFoodImageFromBytes(bytes);
     } catch (e) {
       debugPrint('Error analyzing food image: $e');
@@ -93,123 +90,85 @@ class NutriVisionService {
     }
   }
 
-  /// Analyze food image from bytes (works for all platforms)
-  Future<NutritionalInfo> analyzeFoodImageFromBytes(Uint8List imageBytes) async {
-    try {
-      debugPrint('Analyzing food image from bytes with NutriVision API');
-
-      // Convert bytes to base64
-      final base64Image = base64Encode(imageBytes);
-
-      // Make POST request with base64 image
-      final response = await http.post(
-        Uri.parse('$_baseUrl/analyze'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_apiKey',
-        },
-        body: json.encode({
-          'image_base64': base64Image,
-        }),
-      );
-
-      debugPrint('Response status: ${response.statusCode}');
-      debugPrint('Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        return NutritionalInfo.fromJson(jsonResponse);
-      } else if (response.statusCode == 429) {
-        throw Exception('Rate limit exceeded. Please try again later.');
-      } else if (response.statusCode == 401) {
-        throw Exception('Invalid API key. Please check your credentials.');
-      } else {
-        throw Exception('Failed to analyze image: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('Error analyzing food image from bytes: $e');
-      
-      // For demo purposes, return mock data if API fails
-      debugPrint('⚠️ Using mock data for demo');
-      return _getMockNutritionalInfo();
-    }
-  }
-
-  /// Get mock nutritional data for demo/testing
-  NutritionalInfo _getMockNutritionalInfo() {
-    // Mock data for the salmon and asparagus image
-    return NutritionalInfo(
-      foodName: 'Grilled Salmon with Asparagus',
-      calories: 380,
-      carbs: 12,
-      protein: 42,
-      fat: 18,
-      fiber: 4,
-      sugar: 3,
-      servingSize: 250,
-      servingUnit: 'g',
-    );
-  }
-
   /// Analyze food from URL
   Future<NutritionalInfo> analyzeFoodFromUrl(String imageUrl) async {
     try {
-      debugPrint('Analyzing food from URL with NutriVision API');
-
-      final response = await http.post(
-        Uri.parse('$_baseUrl/analyze'),
-        headers: {
-          'Authorization': 'Bearer $_apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode({
-          'image_url': imageUrl,
-        }),
-      );
-
+      debugPrint('Downloading food image from URL...');
+      final response = await http.get(Uri.parse(imageUrl));
+      
       if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        debugPrint('NutriVision response: $jsonResponse');
-        
-        return NutritionalInfo.fromJson(jsonResponse);
+        return await analyzeFoodImageFromBytes(response.bodyBytes);
       } else {
-        throw Exception('Failed to analyze image: ${response.statusCode}');
+        throw Exception('Failed to download image from URL: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Error analyzing food from URL: $e');
-      return _getMockNutritionalInfo();
+      rethrow;
     }
   }
 
-  /// Predict glucose impact based on nutritional info and current glucose level
+  /// Core Method: Analyze food image from Bytes
+  Future<NutritionalInfo> analyzeFoodImageFromBytes(Uint8List imageBytes) async {
+    try {
+      // 1. Create the prompt
+      final prompt = Content.multi([
+        TextPart("You are a nutritionist. Analyze this food image. Identify the food and estimate its nutritional content. Return ONLY raw JSON with these keys: food_name (string), calories (number), carbohydrates (number), protein (number), fat (number), fiber (number), sugar (number), serving_size (number), serving_unit (string)."),
+        DataPart('image/jpeg', imageBytes),
+      ]);
+
+      // 2. Send to Gemini
+      debugPrint('Sending request to Gemini SDK...');
+      final response = await _model.generateContent([prompt]);
+
+      // 3. Process Response
+      final responseText = response.text;
+      debugPrint('Gemini Response: $responseText');
+
+      if (responseText == null) {
+        throw Exception('Empty response from Gemini');
+      }
+
+      // 4. Parse JSON (Robust handling for List vs Map)
+      final dynamic decodedJson = json.decode(responseText);
+      Map<String, dynamic> finalData;
+
+      if (decodedJson is List) {
+        if (decodedJson.isNotEmpty) {
+          finalData = decodedJson.first as Map<String, dynamic>;
+        } else {
+          throw Exception('Gemini returned an empty list.');
+        }
+      } else if (decodedJson is Map) {
+        finalData = decodedJson as Map<String, dynamic>;
+      } else {
+        throw Exception('Unexpected JSON format: ${decodedJson.runtimeType}');
+      }
+
+      return NutritionalInfo.fromJson(finalData);
+
+    } catch (e) {
+      debugPrint('Gemini Error: $e');
+      rethrow;
+    }
+  }
+
+  // -------------------- LOGIC --------------------
+
   GlucosePrediction predictGlucoseImpact({
     required NutritionalInfo nutrition,
     required double currentGlucose,
   }) {
-    // Calculate net carbs (total carbs - fiber)
     final netCarbs = nutrition.carbs - nutrition.fiber;
-    
-    // Estimate glucose increase (simplified model)
-    // Rule of thumb: 1g of carbs increases blood glucose by ~3-5 mg/dL
-    // We'll use 4 mg/dL as average, adjusted by fiber content
     final fiberAdjustment = nutrition.fiber > 0 ? 0.8 : 1.0;
     final predictedIncrease = netCarbs * 4.0 * fiberAdjustment;
-    
     final predictedPeak = currentGlucose + predictedIncrease;
     
-    // Estimate time to process (based on glycemic index approximation)
-    // High sugar = faster processing, high fiber = slower processing
     final sugarRatio = nutrition.sugar / (nutrition.carbs + 0.1);
     final fiberRatio = nutrition.fiber / (nutrition.carbs + 0.1);
     
-    int timeToProcess = 90; // Base: 90 minutes
-    if (sugarRatio > 0.5) {
-      timeToProcess = 60; // High sugar foods process faster
-    } else if (fiberRatio > 0.2) {
-      timeToProcess = 120; // High fiber foods process slower
-    }
+    int timeToProcess = 90;
+    if (sugarRatio > 0.5) timeToProcess = 60;
+    else if (fiberRatio > 0.2) timeToProcess = 120;
 
-    // Determine risk level
     String riskLevel;
     String recommendation;
 
@@ -218,13 +177,13 @@ class NutriVisionService {
       recommendation = '✅ This meal should keep your glucose in a healthy range.';
     } else if (predictedPeak < 180) {
       riskLevel = 'Moderate';
-      recommendation = '⚡ Your glucose may rise moderately. Consider a short walk after eating.';
+      recommendation = '⚡ Your glucose may rise moderately. Consider a short walk.';
     } else if (predictedPeak < 250) {
       riskLevel = 'High';
-      recommendation = '🔴 This meal may cause a significant glucose spike. Consider reducing portion size or insulin adjustment.';
+      recommendation = '🔴 High spike expected. Consider reducing portion size.';
     } else {
       riskLevel = 'Very High';
-      recommendation = '🆘 This meal will likely cause a very high glucose spike. Strong insulin adjustment recommended.';
+      recommendation = '🆘 Very high spike expected. Caution advised.';
     }
 
     return GlucosePrediction(
@@ -236,7 +195,6 @@ class NutriVisionService {
     );
   }
 
-  /// Format nutritional info for display
   String formatNutritionalInfo(NutritionalInfo info) {
     return '''
 ${info.foodName}
