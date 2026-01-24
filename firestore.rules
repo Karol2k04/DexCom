@@ -14,16 +14,41 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
+    // Check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Check if user is doctor
+    function isDoctor() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'doctor';
+    }
+    
     // ========== USERS COLLECTION ==========
     
     match /users/{userId} {
-      // User can only read/write their own profile
-      allow read, write: if isOwner(userId);
+      // Każdy zalogowany może czytać profile innych (dla lekarzy i adminów)
+      allow read: if isAuthenticated();
+      
+      // Użytkownik może tworzyć tylko swój profil, tylko jako patient
+      allow create: if isOwner(userId) 
+                    && request.resource.data.role == 'patient';
+      
+      // Użytkownik może aktualizować swoje dane ALE NIE rolę
+      // Tylko admin może zmieniać role
+      allow update: if isOwner(userId) 
+                    && request.resource.data.role == resource.data.role
+                    || isAdmin();
+      
+      // Tylko admin może usuwać użytkowników
+      allow delete: if isAdmin();
       
       // ========== GLUCOSE READINGS SUBCOLLECTION ==========
       match /glucose_readings/{readingId} {
-        // User can read all their own readings
-        allow read: if isOwner(userId);
+        // Właściciel może wszystko, lekarze mogą tylko czytać
+        allow read: if isOwner(userId) || isDoctor() || isAdmin();
         
         // User can create new readings (from CSV import)
         allow create: if isOwner(userId) 
@@ -41,8 +66,8 @@ service cloud.firestore {
       
       // ========== CSV IMPORTS SUBCOLLECTION ==========
       match /csv_imports/{importId} {
-        // User can read their import history
-        allow read: if isOwner(userId);
+        // User can read their import history, doctors can read patient imports
+        allow read: if isOwner(userId) || isDoctor() || isAdmin();
         
         // User can create new import records
         allow create: if isOwner(userId)

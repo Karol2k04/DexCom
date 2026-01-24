@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/signup_screen.dart';
+import 'screens/admin/admin_dashboard_screen.dart';
+import 'screens/doctor/doctor_dashboard_screen.dart';
 import 'services/auth_service.dart';
 import 'services/firestore_service.dart';
 import 'providers/glucose_provider.dart';
+import 'models/user_profile.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -39,10 +43,38 @@ class MyApp extends StatelessWidget {
             }
 
             if (snapshot.hasData) {
-              // User is logged in - initialize profile and load data
               final user = snapshot.data!;
-              _initializeUserData(context, user);
-              return const HomeScreen();
+              // Pobierz profil użytkownika i zdecyduj o routingu
+              return FutureBuilder<UserProfile?>(
+                future: _getUserProfile(user.uid),
+                builder: (context, profileSnapshot) {
+                  if (profileSnapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Scaffold(
+                      body: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (profileSnapshot.hasData) {
+                    final profile = profileSnapshot.data!;
+
+                    // Routing bazujący na roli użytkownika
+                    if (profile.isAdmin) {
+                      return const AdminDashboardScreen();
+                    } else if (profile.isDoctor) {
+                      return const DoctorDashboardScreen();
+                    } else {
+                      // Patient - inicjalizuj dane i przekieruj do HomeScreen
+                      _initializeUserData(context, user);
+                      return const HomeScreen();
+                    }
+                  }
+
+                  // Fallback - domyślnie patient
+                  _initializeUserData(context, user);
+                  return const HomeScreen();
+                },
+              );
             }
 
             return const LoginPage();
@@ -50,6 +82,23 @@ class MyApp extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Pobierz profil użytkownika z Firestore
+  Future<UserProfile?> _getUserProfile(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
+
+      if (doc.exists) {
+        return UserProfile.fromFirestore(doc.data() as Map<String, dynamic>);
+      }
+    } catch (e) {
+      debugPrint('Error fetching user profile: $e');
+    }
+    return null;
   }
 
   // Initialize user profile and load data from Firestore

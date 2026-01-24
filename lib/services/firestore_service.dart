@@ -339,6 +339,7 @@ class FirestoreService {
         'uid': user.uid,
         'email': user.email,
         'displayName': user.displayName ?? 'User',
+        'role': 'patient', // Domyślna rola to patient
         'createdAt': FieldValue.serverTimestamp(),
         'lastLogin': FieldValue.serverTimestamp(),
         'settings': {
