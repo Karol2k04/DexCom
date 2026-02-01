@@ -9,6 +9,7 @@ class HistoryEntry {
   final int? carbs;
   final String? alert; // 'low' lub 'high'
   final String trend; // 'up', 'down', 'stable'
+  final DateTime timestamp; // Full timestamp from CSV
 
   HistoryEntry({
     required this.id,
@@ -20,5 +21,6 @@ class HistoryEntry {
     this.carbs,
     this.alert,
     required this.trend,
+    required this.timestamp,
   });
 }

@@ -1,18 +1,129 @@
-rules_version='2'
-
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // ========== HELPER FUNCTIONS ==========
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Check if user is doctor
+    function isDoctor() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'doctor';
+    }
+    
+    // ========== USERS COLLECTION ==========
+    
+    match /users/{userId} {
+      // Każdy zalogowany może czytać profile innych (dla lekarzy i adminów)
+      allow read: if isAuthenticated();
+      
+      // Użytkownik może tworzyć tylko swój profil, tylko jako patient
+      allow create: if isOwner(userId) 
+                    && request.resource.data.role == 'patient';
+      
+      // Użytkownik może aktualizować swoje dane ALE NIE rolę
+      // Tylko admin może zmieniać role
+      allow update: if isOwner(userId) 
+                    && request.resource.data.role == resource.data.role
+                    || isAdmin();
+      
+      // Tylko admin może usuwać użytkowników
+      allow delete: if isAdmin();
+      
+      // ========== GLUCOSE READINGS SUBCOLLECTION ==========
+      match /glucose_readings/{readingId} {
+        // Właściciel może wszystko, lekarze mogą tylko czytać
+        allow read: if isOwner(userId) || isDoctor() || isAdmin();
+        
+        // User can create new readings (from CSV import)
+        allow create: if isOwner(userId) 
+                      && request.resource.data.keys().hasAll(['id', 'timestamp', 'value', 'eventType', 'source'])
+                      && request.resource.data.value is number
+                      && request.resource.data.value >= 0
+                      && request.resource.data.value <= 500;
+        
+        // User can update their readings
+        allow update: if isOwner(userId);
+        
+        // User can delete their readings
+        allow delete: if isOwner(userId);
+      }
+      
+      // ========== CSV IMPORTS SUBCOLLECTION ==========
+      match /csv_imports/{importId} {
+        // User can read their import history, doctors can read patient imports
+        allow read: if isOwner(userId) || isDoctor() || isAdmin();
+        
+        // User can create new import records
+        allow create: if isOwner(userId)
+                      && request.resource.data.keys().hasAll(['importId', 'fileName', 'status']);
+        
+        // User can update import status (for failed imports)
+        allow update: if isOwner(userId);
+        
+        // User can delete import records
+        allow delete: if isOwner(userId);
+      }
+      
+      // ========== STATISTICS SUBCOLLECTION ==========
+      match /statistics/daily_stats {
+        // User can read their statistics
+        allow read: if isOwner(userId);
+        
+        // User can write statistics (automatically calculated)
+        allow write: if isOwner(userId);
+        
+        // Subcollection for individual dates
+        match /dates/{date} {
+          // User can read their daily stats
+          allow read: if isOwner(userId);
+          
+          // User can write/update daily stats
+          allow create, update: if isOwner(userId)
+                                && request.resource.data.keys().hasAll(['date', 'avgGlucose', 'timeInRange', 'readingsCount'])
+                                && request.resource.data.avgGlucose is number
+                                && request.resource.data.timeInRange is number
+                                && request.resource.data.readingsCount is number;
+          
+          // User can delete their stats
+          allow delete: if isOwner(userId);
+        }
+      }
+      
+      // ========== SETTINGS SUBCOLLECTION (future use) ==========
+      match /settings/{settingId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // ========== MEALS SUBCOLLECTION (future use) ==========
+      match /meals/{mealId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // ========== INSULIN DOSES SUBCOLLECTION (future use) ==========
+      match /insulin_doses/{doseId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // ========== DENY ALL OTHER ACCESS ==========
     match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2026, 1, 3);
+      allow read, write: if false;
     }
   }
 }
