@@ -4,7 +4,12 @@ import 'package:health/health.dart';
 /// Native implementation (Android/iOS) of HealthService using the `health` package.
 /// Public API uses string metric keys to remain platform-safe and avoid web-only compilation issues.
 class HealthService {
-  final HealthFactory _health = HealthFactory();
+  final Health _health = Health();
+
+  HealthService() {
+    // Attempt to configure plugin (loads device id) but do not fail if it errors
+    _health.configure().catchError((e) => debugPrint('Health configure failed: $e'));
+  }
 
   // Metric keys exposed to the app (strings)
   static const List<String> allMetrics = [
@@ -64,13 +69,26 @@ class HealthService {
       final ok = await _health.requestAuthorization([type]);
       if (!ok) return [];
 
-      final list = await _health.getHealthDataFromTypes(start, end, [type]);
+      final list = await _health.getHealthDataFromTypes(startTime: start, endTime: end, types: [type]);
       return list
           .map(
-            (p) => {
-              'value': p.value,
-              'dateFrom': p.dateFrom,
-              'dateTo': p.dateTo,
+            (p) {
+              dynamic v;
+              try {
+                if (p.value is NumericHealthValue) {
+                  v = (p.value as NumericHealthValue).numericValue;
+                } else {
+                  v = p.value.toJson();
+                }
+              } catch (_) {
+                v = p.value.toString();
+              }
+
+              return {
+                'value': v,
+                'dateFrom': p.dateFrom,
+                'dateTo': p.dateTo,
+              };
             },
           )
           .toList();
