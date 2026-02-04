@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Permissions for Health data and sensors (Health Connect / Google Fit may still require runtime consent) -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
     <application
         android:label="flutter_application_dexcom"
         android:name="${applicationName}"

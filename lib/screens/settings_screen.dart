@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import 'health_screen.dart';
+import '../providers/settings_provider.dart';
 
 // Ekran ustawień
 class SettingsScreen extends StatefulWidget {
@@ -363,6 +366,86 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       });
                     },
                     contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Health integration (independent from Dexcom/CSV)
+          Card(
+            elevation: 0,
+            color: isDark ? AppTheme.darkCard : AppTheme.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text('💓', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Health Data',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? AppTheme.white : AppTheme.darkBlue,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'View metrics synced from your phone or wearable (HealthKit / Google Fit / Health Connect). These metrics are shown independently from Dexcom or imported CSV data.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HealthScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.health_and_safety),
+                      label: const Text('Open Health Data'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primaryBlue,
+                        side: const BorderSide(color: AppTheme.primaryBlue),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Toggle to include Health glucose into Statistics
+                  Consumer<SettingsProvider>(
+                    builder: (context, settings, child) {
+                      return SwitchListTile(
+                        title: const Text(
+                          'Include health glucose in statistics',
+                        ),
+                        subtitle: const Text(
+                          'Pull BLOOD_GLUCOSE from Health services and include in stats',
+                        ),
+                        value: settings.includeHealthGlucose,
+                        onChanged: (val) =>
+                            settings.setIncludeHealthGlucose(val),
+                        contentPadding: EdgeInsets.zero,
+                      );
+                    },
                   ),
                 ],
               ),

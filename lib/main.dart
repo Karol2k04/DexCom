@@ -11,6 +11,7 @@ import 'screens/doctor/doctor_dashboard_screen.dart';
 import 'services/auth_service.dart';
 import 'services/firestore_service.dart';
 import 'providers/glucose_provider.dart';
+import 'providers/settings_provider.dart';
 import 'models/user_profile.dart';
 import 'theme/app_theme.dart';
 
@@ -26,7 +27,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => GlucoseProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => GlucoseProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+      ],
       child: MaterialApp(
         title: 'DexCom',
         debugShowCheckedModeBanner: false,

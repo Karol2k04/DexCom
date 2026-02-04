@@ -95,7 +95,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   }
                 },
               );
-            }).toList(),
+            }),
           ],
         ),
         actions: [

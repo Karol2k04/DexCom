@@ -27,7 +27,8 @@ android {
         applicationId = "com.example.flutter_application_dexcom"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Elevate minSdk to meet plugin requirements (health plugin requires minSdk 26).
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
