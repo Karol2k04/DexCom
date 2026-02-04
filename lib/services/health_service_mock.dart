@@ -23,11 +23,11 @@ class HealthService {
   ];
 
   /// Simulate granting permissions quickly
-  Future<bool> requestPermissions() async {
+  Future<Map<String, dynamic>> requestPermissions() async {
     debugPrint('Mock HealthService: requestPermissions() called');
     await Future.delayed(const Duration(milliseconds: 300));
     debugPrint('Mock HealthService: permissions granted');
-    return true;
+    return {'ok': true, 'message': 'Mock: permissions granted'};
   }
 
   /// Returns a list of synthetic points for the metric between start and end.
@@ -141,5 +141,15 @@ class HealthService {
       'Mock HealthService: fetchAll(range=${range.inDays}d) completed',
     );
     return result;
+  }
+
+  /// No-op install helper for mock
+  Future<void> installHealthConnect() async {
+    debugPrint('Mock: installHealthConnect() called');
+  }
+
+  /// Mock availability (true so mock behaves as if Health Connect is present)
+  Future<bool> isHealthConnectAvailable() async {
+    return true;
   }
 }

@@ -10,11 +10,44 @@ class HealthScreen extends StatefulWidget {
   State<HealthScreen> createState() => _HealthScreenState();
 }
 
-class _HealthScreenState extends State<HealthScreen> {
+class _HealthScreenState extends State<HealthScreen> with WidgetsBindingObserver {
   final HealthService _svc = HealthService();
   Map<String, List<Map<String, dynamic>>> _data = {};
   bool _loading = false;
   bool _permsGranted = false;
+  bool? _healthConnectAvailable; // null = unknown, false = missing, true = available
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkHealthConnectAvailability();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // Re-detect Health Connect after returning from Play Store / install flow
+      _checkHealthConnectAvailability();
+    }
+  }
+
+  Future<void> _checkHealthConnectAvailability() async {
+    if (kIsWeb) return; // not applicable to web
+    try {
+      final avail = await _svc.isHealthConnectAvailable();
+      if (mounted) setState(() => _healthConnectAvailable = avail);
+    } catch (e) {
+      if (mounted) setState(() => _healthConnectAvailable = false);
+    }
+  }
 
   Future<void> _requestPermissions() async {
     // Early return on web - Health APIs are not supported in web builds
@@ -32,30 +65,57 @@ class _HealthScreenState extends State<HealthScreen> {
       return;
     }
 
+    // Re-check availability (user might have just installed Health Connect)
+    if (!kIsWeb) {
+      await _checkHealthConnectAvailability();
+      if (_healthConnectAvailable == false) {
+        // Still not available -> prompt install and abort
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Google Health Connect is not available on this device.'),
+              action: SnackBarAction(
+                label: 'Install',
+                textColor: AppTheme.white,
+                onPressed: () async {
+                  await _svc.installHealthConnect();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Opening Play Store to install Health Connect...')),
+                  );
+                  await Future.delayed(const Duration(seconds: 2));
+                  await _checkHealthConnectAvailability();
+                },
+              ),
+            ),
+          );
+        }
+        return;
+      }
+    }
+
     setState(() => _loading = true);
-    final ok = await _svc.requestPermissions();
+    final res = await _svc.requestPermissions();
+    final ok = res['ok'] == true;
+    final msg = res['message'] as String? ?? 'Permission denied for Health data';
     setState(() {
       _permsGranted = ok;
       _loading = false;
     });
-    if (ok) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Health permissions granted'),
-            backgroundColor: AppTheme.successGreen,
-          ),
-        );
-      }
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Permission denied for Health data'),
-            backgroundColor: AppTheme.dangerRed,
-          ),
-        );
-      }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(ok ? 'Health permissions granted' : msg),
+          backgroundColor: ok ? AppTheme.successGreen : AppTheme.dangerRed,
+          action: (!ok && msg.contains('Health Connect'))
+              ? SnackBarAction(
+                  label: 'Install',
+                  textColor: AppTheme.white,
+                  onPressed: () => _svc.installHealthConnect(),
+                )
+              : null,
+        ),
+      );
     }
   }
 
@@ -137,23 +197,57 @@ class _HealthScreenState extends State<HealthScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
-                    Row(
+                    Column(
                       children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _loading ? null : _requestPermissions,
-                            child: const Text('Request Permissions'),
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: (_loading || (!kIsWeb && _healthConnectAvailable == false)) ? null : _requestPermissions,
+                                child: const Text('Request Permissions'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: (!_loading && _permsGranted && !kIsWeb)
+                                    ? _sync
+                                    : null,
+                                child: const Text('Sync (7 days)'),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: (!_loading && _permsGranted && !kIsWeb)
-                                ? _sync
-                                : null,
-                            child: const Text('Sync (7 days)'),
+                        const SizedBox(height: 8),
+                        if (!kIsWeb && _healthConnectAvailable == false)
+                          Card(
+                            color: isDark ? AppTheme.darkCard : AppTheme.white,
+                            elevation: 0,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Text(
+                                    'Google Health Connect is not available on this device. To use Health data on Android, please install Health Connect and grant permissions to this app.',
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ElevatedButton(
+                                    onPressed: () async {
+                                      await _svc.installHealthConnect();
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Opening Play Store to install Health Connect...')),
+                                      );
+                                      // re-check availability after a short delay
+                                      await Future.delayed(const Duration(seconds: 2));
+                                      await _checkHealthConnectAvailability();
+                                    },
+                                    child: const Text('Install Health Connect'),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ],

@@ -3,7 +3,15 @@
 class HealthService {
   static const List<String> allMetrics = [];
 
-  Future<bool> requestPermissions() async {
+  Future<Map<String, dynamic>> requestPermissions() async {
+    return {'ok': false, 'message': 'Health APIs are not available on web'};
+  }
+
+  Future<void> installHealthConnect() async {
+    // No-op on web
+  }
+
+  Future<bool> isHealthConnectAvailable() async {
     return false;
   }
 

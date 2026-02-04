@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
 
@@ -8,7 +9,9 @@ class HealthService {
 
   HealthService() {
     // Attempt to configure plugin (loads device id) but do not fail if it errors
-    _health.configure().catchError((e) => debugPrint('Health configure failed: $e'));
+    _health.configure().catchError(
+      (e) => debugPrint('Health configure failed: $e'),
+    );
   }
 
   // Metric keys exposed to the app (strings)
@@ -44,14 +47,43 @@ class HealthService {
   };
 
   /// Request permissions for all selected metrics
-  Future<bool> requestPermissions() async {
+  /// Returns a map: { 'ok': bool, 'message': String }
+  Future<Map<String, dynamic>> requestPermissions() async {
     try {
       final types = _mapping.values.toList();
+
+      // Android: ensure Health Connect availability
+      if (Platform.isAndroid) {
+        final avail = await _health.isHealthConnectAvailable();
+        if (!avail) {
+          final msg = 'Google Health Connect is not available on this device';
+          debugPrint(msg);
+          return {'ok': false, 'message': msg};
+        }
+      }
+
+      final has = await _health.hasPermissions(types);
+      debugPrint('Health.hasPermissions -> $has');
+
       final ok = await _health.requestAuthorization(types);
-      return ok;
+      if (ok == true) return {'ok': true, 'message': 'Health permissions granted'};
+
+      // On Android some read operations may require the Health Data History permission
+      if (Platform.isAndroid) {
+        final histAvailable = await _health.isHealthDataHistoryAvailable();
+        final histAuthorized = await _health.isHealthDataHistoryAuthorized();
+        debugPrint('Health history available=$histAvailable authorized=$histAuthorized');
+        if (histAvailable && !histAuthorized) {
+          final histOk = await _health.requestHealthDataHistoryAuthorization();
+          if (histOk == true) return {'ok': true, 'message': 'Health Data History permission granted'};
+          return {'ok': false, 'message': 'Health Data History permission denied'};
+        }
+      }
+
+      return {'ok': false, 'message': 'Request authorization denied'};
     } catch (e) {
       debugPrint('Health permission request failed: $e');
-      return false;
+      return {'ok': false, 'message': 'Exception: $e'};
     }
   }
 
@@ -69,29 +101,25 @@ class HealthService {
       final ok = await _health.requestAuthorization([type]);
       if (!ok) return [];
 
-      final list = await _health.getHealthDataFromTypes(startTime: start, endTime: end, types: [type]);
-      return list
-          .map(
-            (p) {
-              dynamic v;
-              try {
-                if (p.value is NumericHealthValue) {
-                  v = (p.value as NumericHealthValue).numericValue;
-                } else {
-                  v = p.value.toJson();
-                }
-              } catch (_) {
-                v = p.value.toString();
-              }
+      final list = await _health.getHealthDataFromTypes(
+        startTime: start,
+        endTime: end,
+        types: [type],
+      );
+      return list.map((p) {
+        dynamic v;
+        try {
+          if (p.value is NumericHealthValue) {
+            v = (p.value as NumericHealthValue).numericValue;
+          } else {
+            v = p.value.toJson();
+          }
+        } catch (_) {
+          v = p.value.toString();
+        }
 
-              return {
-                'value': v,
-                'dateFrom': p.dateFrom,
-                'dateTo': p.dateTo,
-              };
-            },
-          )
-          .toList();
+        return {'value': v, 'dateFrom': p.dateFrom, 'dateTo': p.dateTo};
+      }).toList();
     } catch (e) {
       debugPrint('Error fetching $metric: $e');
       return [];
@@ -113,5 +141,25 @@ class HealthService {
     }
 
     return result;
+  }
+
+  /// Request that the user install Health Connect (Android) if not available.
+  Future<void> installHealthConnect() async {
+    try {
+      await _health.installHealthConnect();
+    } catch (e) {
+      debugPrint('installHealthConnect failed: $e');
+    }
+  }
+
+  /// Returns true if Google Health Connect is available on Android (true on iOS)
+  Future<bool> isHealthConnectAvailable() async {
+    try {
+      if (!Platform.isAndroid) return true; // iOS does not use Health Connect
+      return await _health.isHealthConnectAvailable();
+    } catch (e) {
+      debugPrint('isHealthConnectAvailable failed: $e');
+      return false;
+    }
   }
 }
