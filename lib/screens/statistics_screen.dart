@@ -170,7 +170,7 @@ class StatisticsScreen extends StatelessWidget {
                               Text('🎯', style: TextStyle(fontSize: 24)),
                               const SizedBox(height: 8),
                               Text(
-                                '${avgTir}%',
+                                '$avgTir%',
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -504,7 +504,7 @@ class StatisticsScreen extends StatelessWidget {
                         Text('🎯', style: TextStyle(fontSize: 24)),
                         const SizedBox(height: 8),
                         Text(
-                          '${avgTir}%',
+                          '$avgTir%',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,

@@ -205,8 +205,9 @@ class CsvImportService {
           }
 
           // Now check remaining columns exist
-          if (row.length <= requiredIdx || row.length <= requiredGluIdx)
+          if (row.length <= requiredIdx || row.length <= requiredGluIdx) {
             continue;
+          }
 
           // Parse Timestamp
           final timestampStr = (row[requiredIdx]?.toString().trim() ?? '');

@@ -18,11 +18,11 @@ class GlucoseProvider with ChangeNotifier {
   List<GlucoseReading> get glucoseData => _glucoseData;
 
   // CSV specific data
-  List<CsvDataEntry> _csvEntries = [];
+  final List<CsvDataEntry> _csvEntries = [];
   List<CsvDataEntry> get csvEntries => _csvEntries;
 
   // History entries from CSV imports
-  List<HistoryEntry> _historyEntries = [];
+  final List<HistoryEntry> _historyEntries = [];
   List<HistoryEntry> get historyEntries => _historyEntries;
 
   bool _isLoading = false;

@@ -230,7 +230,7 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                         ),
                         const SizedBox(height: 8),
                         DropdownButtonFormField<DexcomRegion>(
-                          value: _selectedRegion,
+                          initialValue: _selectedRegion,
                           decoration: InputDecoration(
                             hintText: 'Select your region',
                             prefixIcon: const Icon(

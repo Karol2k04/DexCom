@@ -11,13 +11,13 @@ class GlassContainer extends StatelessWidget {
   final Color? overlayColor;
 
   const GlassContainer({
-    Key? key,
+    super.key,
     required this.child,
     this.borderRadius,
     this.padding,
     this.blur = 8.0,
     this.overlayColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

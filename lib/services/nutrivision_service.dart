@@ -7,7 +7,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:http/http.dart' as http;
 
 // Import your API key file
-import 'api_key.dart'; 
+import 'api_key.dart';
 
 // -------------------- MODELS --------------------
 
@@ -68,14 +68,11 @@ class GlucosePrediction {
 // -------------------- SERVICE --------------------
 
 class NutriVisionService {
-  
   // Initialize model using the key from api_key.dart
   final GenerativeModel _model = GenerativeModel(
     model: 'gemini-2.0-flash',
     apiKey: googleGeminiApiKey, // <--- Using the imported constant here
-    generationConfig: GenerationConfig(
-      responseMimeType: 'application/json',
-    ),
+    generationConfig: GenerationConfig(responseMimeType: 'application/json'),
   );
 
   /// Analyze food image from File (Mobile/Desktop)
@@ -95,11 +92,13 @@ class NutriVisionService {
     try {
       debugPrint('Downloading food image from URL...');
       final response = await http.get(Uri.parse(imageUrl));
-      
+
       if (response.statusCode == 200) {
         return await analyzeFoodImageFromBytes(response.bodyBytes);
       } else {
-        throw Exception('Failed to download image from URL: ${response.statusCode}');
+        throw Exception(
+          'Failed to download image from URL: ${response.statusCode}',
+        );
       }
     } catch (e) {
       rethrow;
@@ -107,11 +106,15 @@ class NutriVisionService {
   }
 
   /// Core Method: Analyze food image from Bytes
-  Future<NutritionalInfo> analyzeFoodImageFromBytes(Uint8List imageBytes) async {
+  Future<NutritionalInfo> analyzeFoodImageFromBytes(
+    Uint8List imageBytes,
+  ) async {
     try {
       // 1. Create the prompt
       final prompt = Content.multi([
-        TextPart("You are a nutritionist. Analyze this food image. Identify the food and estimate its nutritional content. Return ONLY raw JSON with these keys: food_name (string), calories (number), carbohydrates (number), protein (number), fat (number), fiber (number), sugar (number), serving_size (number), serving_unit (string)."),
+        TextPart(
+          "You are a nutritionist. Analyze this food image. Identify the food and estimate its nutritional content. Return ONLY raw JSON with these keys: food_name (string), calories (number), carbohydrates (number), protein (number), fat (number), fiber (number), sugar (number), serving_size (number), serving_unit (string).",
+        ),
         DataPart('image/jpeg', imageBytes),
       ]);
 
@@ -144,7 +147,6 @@ class NutriVisionService {
       }
 
       return NutritionalInfo.fromJson(finalData);
-
     } catch (e) {
       debugPrint('Gemini Error: $e');
       rethrow;
@@ -161,26 +163,31 @@ class NutriVisionService {
     final fiberAdjustment = nutrition.fiber > 0 ? 0.8 : 1.0;
     final predictedIncrease = netCarbs * 4.0 * fiberAdjustment;
     final predictedPeak = currentGlucose + predictedIncrease;
-    
+
     final sugarRatio = nutrition.sugar / (nutrition.carbs + 0.1);
     final fiberRatio = nutrition.fiber / (nutrition.carbs + 0.1);
-    
+
     int timeToProcess = 90;
-    if (sugarRatio > 0.5) timeToProcess = 60;
-    else if (fiberRatio > 0.2) timeToProcess = 120;
+    if (sugarRatio > 0.5) {
+      timeToProcess = 60;
+    } else if (fiberRatio > 0.2)
+      timeToProcess = 120;
 
     String riskLevel;
     String recommendation;
 
     if (predictedPeak < 140) {
       riskLevel = 'Low';
-      recommendation = '✅ This meal should keep your glucose in a healthy range.';
+      recommendation =
+          '✅ This meal should keep your glucose in a healthy range.';
     } else if (predictedPeak < 180) {
       riskLevel = 'Moderate';
-      recommendation = '⚡ Your glucose may rise moderately. Consider a short walk.';
+      recommendation =
+          '⚡ Your glucose may rise moderately. Consider a short walk.';
     } else if (predictedPeak < 250) {
       riskLevel = 'High';
-      recommendation = '🔴 High spike expected. Consider reducing portion size.';
+      recommendation =
+          '🔴 High spike expected. Consider reducing portion size.';
     } else {
       riskLevel = 'Very High';
       recommendation = '🆘 Very high spike expected. Caution advised.';

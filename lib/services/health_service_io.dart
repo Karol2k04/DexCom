@@ -66,17 +66,29 @@ class HealthService {
       debugPrint('Health.hasPermissions -> $has');
 
       final ok = await _health.requestAuthorization(types);
-      if (ok == true) return {'ok': true, 'message': 'Health permissions granted'};
+      if (ok == true) {
+        return {'ok': true, 'message': 'Health permissions granted'};
+      }
 
       // On Android some read operations may require the Health Data History permission
       if (Platform.isAndroid) {
         final histAvailable = await _health.isHealthDataHistoryAvailable();
         final histAuthorized = await _health.isHealthDataHistoryAuthorized();
-        debugPrint('Health history available=$histAvailable authorized=$histAuthorized');
+        debugPrint(
+          'Health history available=$histAvailable authorized=$histAuthorized',
+        );
         if (histAvailable && !histAuthorized) {
           final histOk = await _health.requestHealthDataHistoryAuthorization();
-          if (histOk == true) return {'ok': true, 'message': 'Health Data History permission granted'};
-          return {'ok': false, 'message': 'Health Data History permission denied'};
+          if (histOk == true) {
+            return {
+              'ok': true,
+              'message': 'Health Data History permission granted',
+            };
+          }
+          return {
+            'ok': false,
+            'message': 'Health Data History permission denied',
+          };
         }
       }
 

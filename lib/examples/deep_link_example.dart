@@ -1,7 +1,6 @@
 // Przykład użycia Deep Link Service w Twojej aplikacji
 // Dodaj ten kod do main.dart
 
-import 'package:flutter/material.dart';
 import 'services/deep_link_service.dart';
 
 /*
