@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:dexcom/dexcom.dart';
 import '../providers/glucose_provider.dart';
 import '../theme/app_theme.dart';
+import 'health_screen.dart';
 
 /// Screen for connecting to Dexcom Share API
 class DexcomConnectScreen extends StatefulWidget {
@@ -17,7 +18,8 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  DexcomRegion _selectedRegion = DexcomRegion.ous; // Default to OUS (Europe/Outside US)
+  DexcomRegion _selectedRegion =
+      DexcomRegion.ous; // Default to OUS (Europe/Outside US)
 
   @override
   void dispose() {
@@ -29,14 +31,14 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
   Future<void> _handleConnect() async {
     if (_formKey.currentState!.validate()) {
       final provider = Provider.of<GlucoseProvider>(context, listen: false);
-      
+
       try {
         await provider.connectDexcom(
           _usernameController.text.trim(),
           _passwordController.text,
           region: _selectedRegion, // Pass the selected region
         );
-        
+
         if (mounted && provider.isConnected) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -62,7 +64,7 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
 
   Future<void> _handleDisconnect() async {
     final provider = Provider.of<GlucoseProvider>(context, listen: false);
-    
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -103,10 +105,7 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
     final provider = Provider.of<GlucoseProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Connect to Dexcom'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Connect to Dexcom'), elevation: 0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -121,7 +120,7 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                 color: AppTheme.primaryBlue,
               ),
               const SizedBox(height: 16),
-              
+
               // Title
               Text(
                 'Connect Your Dexcom',
@@ -133,7 +132,7 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               // Subtitle
               Text(
                 'Enter your Dexcom Share credentials to sync your glucose data',
@@ -179,7 +178,9 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                                     '${provider.glucoseData.length} readings loaded',
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                      color: isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
                                     ),
                                   ),
                                 ],
@@ -222,7 +223,9 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.grey[400] : AppTheme.darkGray,
+                            color: isDark
+                                ? Colors.grey[400]
+                                : AppTheme.darkGray,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -290,7 +293,9 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.grey[400] : AppTheme.darkGray,
+                            color: isDark
+                                ? Colors.grey[400]
+                                : AppTheme.darkGray,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -345,7 +350,9 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.grey[400] : AppTheme.darkGray,
+                            color: isDark
+                                ? Colors.grey[400]
+                                : AppTheme.darkGray,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -394,6 +401,28 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                           },
                         ),
                       ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Health integration quick link
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HealthScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.health_and_safety),
+                    label: const Text('Open Health Data'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryBlue,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
@@ -482,7 +511,10 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                 elevation: 0,
                 color: isDark ? AppTheme.darkCard : AppTheme.white,
                 child: ExpansionTile(
-                  leading: const Icon(Icons.help_outline, color: AppTheme.warningOrange),
+                  leading: const Icon(
+                    Icons.help_outline,
+                    color: AppTheme.warningOrange,
+                  ),
                   title: const Text('Troubleshooting'),
                   children: [
                     Padding(
@@ -503,7 +535,9 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                             '• Verify credentials work on share.dexcom.com',
                             style: TextStyle(
                               fontSize: 13,
-                              color: isDark ? Colors.grey[400] : Colors.grey[700],
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[700],
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -518,7 +552,9 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                             '• Japan: For Japan-based accounts',
                             style: TextStyle(
                               fontSize: 13,
-                              color: isDark ? Colors.grey[400] : Colors.grey[700],
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[700],
                             ),
                           ),
                         ],

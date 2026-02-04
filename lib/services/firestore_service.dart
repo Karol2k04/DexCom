@@ -345,6 +345,7 @@ class FirestoreService {
         'settings': {
           'targetRange': {'low': 70, 'high': 180},
           'units': 'mg/dL',
+          'includeHealthGlucose': false,
         },
       });
       debugPrint('✅ User profile created for ${user.email}');
@@ -353,6 +354,26 @@ class FirestoreService {
       await userDoc.update({'lastLogin': FieldValue.serverTimestamp()});
       debugPrint('✅ Last login updated for ${user.email}');
     }
+  }
+
+  /// Read user settings (returns null if not available)
+  Future<Map<String, dynamic>?> getUserSettings() async {
+    if (_userId == null) return null;
+    final snapshot = await _firestore.collection('users').doc(_userId).get();
+    if (!snapshot.exists) return null;
+    final data = snapshot.data() as Map<String, dynamic>;
+    if (data.containsKey('settings')) {
+      return Map<String, dynamic>.from(data['settings'] as Map);
+    }
+    return null;
+  }
+
+  /// Update a specific user setting
+  Future<void> updateUserSetting(String key, dynamic value) async {
+    if (_userId == null) return;
+    await _firestore.collection('users').doc(_userId).set({
+      'settings': {key: value},
+    }, SetOptions(merge: true));
   }
 
   /// Check if user has any data in Firestore
