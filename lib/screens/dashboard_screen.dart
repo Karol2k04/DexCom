@@ -21,18 +21,24 @@ class DashboardScreen extends StatelessWidget {
     return Consumer<GlucoseProvider>(
       builder: (context, glucoseProvider, child) {
         final List<GlucoseReading> glucoseData = glucoseProvider.glucoseData;
-        
-        final double currentGlucose = glucoseData.isNotEmpty 
-            ? glucoseData.last.value 
+
+        final double currentGlucose = glucoseData.isNotEmpty
+            ? glucoseData.last.value
             : 0;
-        
+
         // Calculate stats from actual data
         final double avgGlucose = glucoseData.isNotEmpty
-            ? glucoseData.map((r) => r.value).reduce((a, b) => a + b) / glucoseData.length
+            ? glucoseData.map((r) => r.value).reduce((a, b) => a + b) /
+                  glucoseData.length
             : 0;
-        
+
         final int timeInRange = glucoseData.isNotEmpty
-            ? (glucoseData.where((r) => r.value >= 70 && r.value <= 180).length / glucoseData.length * 100).round()
+            ? (glucoseData
+                          .where((r) => r.value >= 70 && r.value <= 180)
+                          .length /
+                      glucoseData.length *
+                      100)
+                  .round()
             : 0;
 
         return SingleChildScrollView(
@@ -85,7 +91,8 @@ class DashboardScreen extends StatelessWidget {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const DexcomConnectScreen(),
+                                      builder: (context) =>
+                                          const DexcomConnectScreen(),
                                     ),
                                   );
                                 },
@@ -93,7 +100,9 @@ class DashboardScreen extends StatelessWidget {
                                 label: const Text('Connect Dexcom'),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppTheme.primaryBlue,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                 ),
                               ),
                             ),
@@ -104,7 +113,8 @@ class DashboardScreen extends StatelessWidget {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => const CsvImportScreen(),
+                                      builder: (context) =>
+                                          const CsvImportScreen(),
                                     ),
                                   );
                                 },
@@ -112,8 +122,12 @@ class DashboardScreen extends StatelessWidget {
                                 label: const Text('Import CSV'),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppTheme.successGreen,
-                                  side: const BorderSide(color: AppTheme.successGreen),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  side: const BorderSide(
+                                    color: AppTheme.successGreen,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                 ),
                               ),
                             ),
@@ -269,9 +283,7 @@ class DashboardScreen extends StatelessWidget {
                         Expanded(
                           child: Text(
                             glucoseProvider.errorMessage!,
-                            style: TextStyle(
-                              color: AppTheme.dangerRed,
-                            ),
+                            style: TextStyle(color: AppTheme.dangerRed),
                           ),
                         ),
                       ],
@@ -281,7 +293,7 @@ class DashboardScreen extends StatelessWidget {
 
               if (glucoseData.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                
+
                 // Current Glucose Card
                 GlassContainer(
                   padding: const EdgeInsets.all(24),
@@ -299,7 +311,9 @@ class DashboardScreen extends StatelessWidget {
                           Text(
                             '📊 Current Level',
                             style: TextStyle(
-                              color: isDark ? Colors.grey[400] : AppTheme.darkGray,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : AppTheme.darkGray,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -310,21 +324,26 @@ class DashboardScreen extends StatelessWidget {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.getGlucoseStatusColor(currentGlucose)
-                                  .withOpacity(0.15),
+                              color: AppTheme.getGlucoseStatusColor(
+                                currentGlucose,
+                              ).withOpacity(0.15),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
                               children: [
                                 Text(
-                                  AppTheme.getGlucoseStatusEmoji(currentGlucose),
+                                  AppTheme.getGlucoseStatusEmoji(
+                                    currentGlucose,
+                                  ),
                                   style: const TextStyle(fontSize: 16),
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
                                   AppTheme.getGlucoseStatusText(currentGlucose),
                                   style: TextStyle(
-                                    color: AppTheme.getGlucoseStatusColor(currentGlucose),
+                                    color: AppTheme.getGlucoseStatusColor(
+                                      currentGlucose,
+                                    ),
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -344,16 +363,23 @@ class DashboardScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 64,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.getGlucoseStatusColor(currentGlucose),
+                              color: AppTheme.getGlucoseStatusColor(
+                                currentGlucose,
+                              ),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(left: 12, bottom: 12),
+                            padding: const EdgeInsets.only(
+                              left: 12,
+                              bottom: 12,
+                            ),
                             child: Text(
                               'mg/dL',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: isDark ? Colors.grey[400] : AppTheme.darkGray,
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : AppTheme.darkGray,
                               ),
                             ),
                           ),
@@ -374,7 +400,9 @@ class DashboardScreen extends StatelessWidget {
                                 '🕐 ${glucoseData.last.time}',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: isDark ? Colors.grey[500] : Colors.grey[400],
+                                  color: isDark
+                                      ? Colors.grey[500]
+                                      : Colors.grey[400],
                                 ),
                               ),
                             ],
@@ -515,13 +543,15 @@ class DashboardScreen extends StatelessWidget {
                                     showTitles: true,
                                     reservedSize: 30,
                                     interval: glucoseData.length > 20
-                                        ? (glucoseData.length / 6).ceilToDouble()
+                                        ? (glucoseData.length / 6)
+                                              .ceilToDouble()
                                         : 4,
                                     getTitlesWidget: (value, meta) {
                                       if (value.toInt() >= glucoseData.length) {
                                         return const SizedBox();
                                       }
-                                      final time = glucoseData[value.toInt()].time;
+                                      final time =
+                                          glucoseData[value.toInt()].time;
                                       return Padding(
                                         padding: const EdgeInsets.only(top: 8),
                                         child: Text(
@@ -552,18 +582,24 @@ class DashboardScreen extends StatelessWidget {
                                   spots: glucoseData
                                       .asMap()
                                       .entries
-                                      .map((e) => FlSpot(
-                                            e.key.toDouble(),
-                                            e.value.value,
-                                          ))
+                                      .map(
+                                        (e) => FlSpot(
+                                          e.key.toDouble(),
+                                          e.value.value,
+                                        ),
+                                      )
                                       .toList(),
                                   isCurved: true,
                                   color: AppTheme.successGreen,
                                   barWidth: 3,
-                                  dotData: FlDotData(show: glucoseData.length <= 50),
+                                  dotData: FlDotData(
+                                    show: glucoseData.length <= 50,
+                                  ),
                                   belowBarData: BarAreaData(
                                     show: true,
-                                    color: AppTheme.successGreen.withOpacity(0.1),
+                                    color: AppTheme.successGreen.withOpacity(
+                                      0.1,
+                                    ),
                                   ),
                                 ),
                               ],

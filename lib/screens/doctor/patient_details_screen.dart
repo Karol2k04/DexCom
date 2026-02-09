@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../models/user_profile.dart';
 import '../../models/glucose_reading.dart';
+import '../../models/meal.dart';
 import '../../services/doctor_service.dart';
+import '../../services/firestore_service.dart';
 import '../../theme/app_theme.dart';
+import 'package:intl/intl.dart';
 
 class PatientDetailsScreen extends StatefulWidget {
   final UserProfile patient;
@@ -15,8 +18,10 @@ class PatientDetailsScreen extends StatefulWidget {
 
 class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   final DoctorService _doctorService = DoctorService();
+  final FirestoreService _firestoreService = FirestoreService();
   Map<String, dynamic>? _statistics;
   bool _loadingStats = true;
+  int _selectedTab = 0; // 0 = Glucose, 1 = Meals
 
   @override
   void initState() {
@@ -92,6 +97,77 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
               ),
             ),
 
+            // Tabs
+            Container(
+              color: AppTheme.primaryBlue.withOpacity(0.1),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedTab = 0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: _selectedTab == 0
+                                  ? AppTheme.primaryBlue
+                                  : Colors.transparent,
+                              width: 3,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          '📊 Glucose',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: _selectedTab == 0
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: _selectedTab == 0
+                                ? AppTheme.primaryBlue
+                                : Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedTab = 1),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: _selectedTab == 1
+                                  ? AppTheme.primaryBlue
+                                  : Colors.transparent,
+                              width: 3,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          '🍽️ Meals',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: _selectedTab == 1
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: _selectedTab == 1
+                                ? AppTheme.primaryBlue
+                                : Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             // Statystyki
             Padding(
               padding: const EdgeInsets.all(16),
@@ -114,41 +190,93 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
             ),
 
             // Wykres odczytów glukozy
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Ostatnie odczyty',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  StreamBuilder<List<GlucoseReading>>(
-                    stream: _doctorService.getPatientGlucoseReadings(
-                      widget.patient.uid,
+            if (_selectedTab == 0)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ostatnie odczyty',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
+                    const SizedBox(height: 16),
+                    StreamBuilder<List<GlucoseReading>>(
+                      stream: _doctorService.getPatientGlucoseReadings(
+                        widget.patient.uid,
+                      ),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
 
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(32.0),
-                            child: Text('Brak odczytów glukozy'),
-                          ),
-                        );
-                      }
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32.0),
+                              child: Text('Brak odczytów glukozy'),
+                            ),
+                          );
+                        }
 
-                      final readings = snapshot.data!;
-                      return _buildReadingsList(readings);
-                    },
-                  ),
-                ],
+                        final readings = snapshot.data!;
+                        return _buildReadingsList(readings);
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
+
+            // Patient meals
+            if (_selectedTab == 1)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ostatnie posiłki',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    StreamBuilder<List<Meal>>(
+                      stream: _firestoreService.getPatientMealsStream(
+                        patientId: widget.patient.uid,
+                        limit: 30,
+                      ),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32.0),
+                              child: Text('Brak zarejestrowanych posiłków'),
+                            ),
+                          );
+                        }
+
+                        final meals = snapshot.data!;
+                        return _buildMealsList(meals);
+                      },
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
@@ -262,5 +390,160 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
         );
       },
     );
+  }
+
+  Widget _buildMealsList(List<Meal> meals) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: meals.length,
+      itemBuilder: (context, index) {
+        final meal = meals[index];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ExpansionTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryBlue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                meal.mealType.emoji,
+                style: const TextStyle(fontSize: 24),
+              ),
+            ),
+            title: Text(
+              meal.foodName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              '${DateFormat('MMM d, yyyy').format(meal.timestamp)} at ${meal.formattedTime} • ${meal.mealType.displayName}',
+            ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Nutritional Info:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildMealDetailRow(
+                      'Calories',
+                      '${meal.nutritionalData.calories.toStringAsFixed(0)} kcal',
+                    ),
+                    _buildMealDetailRow(
+                      'Carbs',
+                      '${meal.nutritionalData.carbs.toStringAsFixed(1)}g',
+                    ),
+                    _buildMealDetailRow(
+                      'Protein',
+                      '${meal.nutritionalData.protein.toStringAsFixed(1)}g',
+                    ),
+                    _buildMealDetailRow(
+                      'Fat',
+                      '${meal.nutritionalData.fat.toStringAsFixed(1)}g',
+                    ),
+                    if (meal.glucoseImpact != null) ...[
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Glucose Impact:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: _getRiskColor(
+                            meal.glucoseImpact!.riskLevel,
+                          ).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildMealDetailRow(
+                              'Predicted Peak',
+                              '${meal.glucoseImpact!.predictedPeakGlucose.toStringAsFixed(0)} mg/dL',
+                            ),
+                            _buildMealDetailRow(
+                              'Risk Level',
+                              meal.glucoseImpact!.riskLevel,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              meal.glucoseImpact!.recommendation,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (meal.notes != null && meal.notes!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Notes:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        meal.notes!,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMealDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getRiskColor(String riskLevel) {
+    switch (riskLevel) {
+      case 'Low':
+        return AppTheme.successGreen;
+      case 'Moderate':
+        return AppTheme.warningOrange;
+      case 'High':
+        return AppTheme.dangerRed;
+      case 'Very High':
+        return AppTheme.lowRed;
+      default:
+        return AppTheme.primaryBlue;
+    }
   }
 }

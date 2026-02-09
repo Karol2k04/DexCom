@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/glass_container.dart';
+import '../models/meal.dart';
+import '../services/firestore_service.dart';
+import '../providers/glucose_provider.dart';
 
 // Ekran dodawania posiłku
 class AddMealScreen extends StatefulWidget {
@@ -15,34 +19,47 @@ class AddMealScreen extends StatefulWidget {
 class _AddMealScreenState extends State<AddMealScreen> {
   final _formKey = GlobalKey<FormState>();
   final _mealNameController = TextEditingController();
+  final _caloriesController = TextEditingController();
   final _carbsController = TextEditingController();
+  final _proteinController = TextEditingController();
+  final _fatController = TextEditingController();
+  final _fiberController = TextEditingController();
+  final _sugarController = TextEditingController();
+  final _notesController = TextEditingController();
+  final FirestoreService _firestoreService = FirestoreService();
+
   int selectedIcon = 0;
   TimeOfDay selectedTime = TimeOfDay.now();
   bool showSuccess = false;
+  bool _isSaving = false;
 
   final List<Map<String, dynamic>> mealIcons = [
     {
       'icon': Icons.coffee,
       'emoji': '🍳',
       'label': 'Breakfast',
+      'type': MealType.breakfast,
       'color': AppTheme.warningOrange,
     },
     {
       'icon': Icons.soup_kitchen,
       'emoji': '🍽️',
       'label': 'Lunch',
+      'type': MealType.lunch,
       'color': AppTheme.primaryBlue,
     },
     {
       'icon': Icons.dinner_dining,
       'emoji': '🍖',
       'label': 'Dinner',
+      'type': MealType.dinner,
       'color': AppTheme.dangerRed,
     },
     {
       'icon': Icons.apple,
       'emoji': '🍎',
       'label': 'Snack',
+      'type': MealType.snack,
       'color': AppTheme.successGreen,
     },
   ];
@@ -50,18 +67,117 @@ class _AddMealScreenState extends State<AddMealScreen> {
   @override
   void dispose() {
     _mealNameController.dispose();
+    _caloriesController.dispose();
     _carbsController.dispose();
+    _proteinController.dispose();
+    _fatController.dispose();
+    _fiberController.dispose();
+    _sugarController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
-  void handleSubmit() {
+  Future<void> handleSubmit() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        showSuccess = true;
-      });
-      Future.delayed(const Duration(milliseconds: 1500), () {
-        widget.onBack();
-      });
+      setState(() => _isSaving = true);
+
+      try {
+        final now = DateTime.now();
+        final mealDateTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          selectedTime.hour,
+          selectedTime.minute,
+        );
+
+        final glucoseProvider = Provider.of<GlucoseProvider>(
+          context,
+          listen: false,
+        );
+        final currentGlucose = glucoseProvider.glucoseData.isNotEmpty
+            ? glucoseProvider.glucoseData.last.value
+            : 0.0;
+
+        final meal = Meal(
+          id: '',
+          userId: '',
+          mealType: mealIcons[selectedIcon]['type'] as MealType,
+          foodName: _mealNameController.text.trim(),
+          timestamp: mealDateTime,
+          imageUrl: null,
+          nutritionalData: NutritionalData(
+            calories: double.tryParse(_caloriesController.text) ?? 0,
+            carbs: double.tryParse(_carbsController.text) ?? 0,
+            protein: double.tryParse(_proteinController.text) ?? 0,
+            fat: double.tryParse(_fatController.text) ?? 0,
+            fiber: double.tryParse(_fiberController.text) ?? 0,
+            sugar: double.tryParse(_sugarController.text) ?? 0,
+            servingSize: 100,
+            servingUnit: 'g',
+          ),
+          glucoseImpact: currentGlucose > 0
+              ? GlucoseImpact(
+                  currentGlucose: currentGlucose,
+                  predictedIncrease:
+                      (double.tryParse(_carbsController.text) ?? 0) * 4.0,
+                  predictedPeakGlucose:
+                      currentGlucose +
+                      ((double.tryParse(_carbsController.text) ?? 0) * 4.0),
+                  timeToProcessMinutes: 90,
+                  riskLevel: 'Moderate',
+                  recommendation:
+                      'Monitor your glucose levels after this meal.',
+                )
+              : null,
+          notes: _notesController.text.isNotEmpty
+              ? _notesController.text
+              : null,
+        );
+
+        await _firestoreService.saveMeal(meal);
+
+        if (mounted) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '✅ ${mealIcons[selectedIcon]['emoji']} Meal saved successfully!',
+              ),
+              backgroundColor: AppTheme.successGreen,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+
+          // Reset form
+          setState(() {
+            _mealNameController.clear();
+            _caloriesController.clear();
+            _carbsController.clear();
+            _proteinController.clear();
+            _fatController.clear();
+            _fiberController.clear();
+            _sugarController.clear();
+            _notesController.clear();
+            selectedIcon = 0;
+            selectedTime = TimeOfDay.now();
+            _isSaving = false;
+          });
+
+          // Reset form validation
+          _formKey.currentState?.reset();
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isSaving = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error saving meal: $e'),
+              backgroundColor: AppTheme.dangerRed,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -266,7 +382,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Węglowodany
+            // Nutritional Information Card
             Card(
               elevation: 0,
               color: isDark ? AppTheme.darkCard : AppTheme.white,
@@ -276,18 +392,108 @@ class _AddMealScreenState extends State<AddMealScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Carbs (g)',
+                      '📊 Nutritional Information',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppTheme.darkGray,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Calories
+                    _buildNutrientField(
+                      controller: _caloriesController,
+                      label: 'Calories',
+                      hint: 'e.g. 250',
+                      icon: Icons.local_fire_department,
+                      iconColor: AppTheme.warningOrange,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Carbs
+                    _buildNutrientField(
+                      controller: _carbsController,
+                      label: 'Carbohydrates (g)',
+                      hint: 'e.g. 45',
+                      icon: Icons.grain,
+                      iconColor: AppTheme.primaryBlue,
+                      isDark: isDark,
+                      required: true,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Protein
+                    _buildNutrientField(
+                      controller: _proteinController,
+                      label: 'Protein (g)',
+                      hint: 'e.g. 15',
+                      icon: Icons.fitness_center,
+                      iconColor: AppTheme.successGreen,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Fat
+                    _buildNutrientField(
+                      controller: _fatController,
+                      label: 'Fat (g)',
+                      hint: 'e.g. 8',
+                      icon: Icons.water_drop,
+                      iconColor: Colors.amber,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Sugar
+                    _buildNutrientField(
+                      controller: _sugarController,
+                      label: 'Sugar (g)',
+                      hint: 'e.g. 10',
+                      icon: Icons.cookie,
+                      iconColor: AppTheme.dangerRed,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Fiber
+                    _buildNutrientField(
+                      controller: _fiberController,
+                      label: 'Fiber (g)',
+                      hint: 'e.g. 5',
+                      icon: Icons.eco,
+                      iconColor: AppTheme.successGreen,
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Notes
+            Card(
+              elevation: 0,
+              color: isDark ? AppTheme.darkCard : AppTheme.white,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '📝 Notes (optional)',
                       style: TextStyle(
                         fontSize: 14,
                         color: isDark ? Colors.grey[400] : AppTheme.darkGray,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _carbsController,
-                      keyboardType: TextInputType.number,
+                    TextField(
+                      controller: _notesController,
+                      maxLines: 2,
                       decoration: InputDecoration(
-                        hintText: 'e.g. 45',
+                        hintText: 'Add any notes...',
                         filled: true,
                         fillColor: isDark
                             ? AppTheme.darkSurface
@@ -297,12 +503,6 @@ class _AddMealScreenState extends State<AddMealScreen> {
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter carbohydrate amount';
-                        }
-                        return null;
-                      },
                     ),
                   ],
                 ),
@@ -338,7 +538,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
 
             // Przycisk zapisu
             ElevatedButton(
-              onPressed: handleSubmit,
+              onPressed: _isSaving ? null : handleSubmit,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.successGreen,
                 foregroundColor: AppTheme.white,
@@ -347,15 +547,74 @@ class _AddMealScreenState extends State<AddMealScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Save Meal',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppTheme.white,
+                        ),
+                      ),
+                    )
+                  : const Text(
+                      'Save Meal',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
             const SizedBox(height: 100),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildNutrientField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    required Color iconColor,
+    required bool isDark,
+    bool required = false,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: iconColor, size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: TextFormField(
+            controller: controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: label,
+              hintText: hint,
+              filled: true,
+              fillColor: isDark ? AppTheme.darkSurface : AppTheme.lightGray,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+            ),
+            validator: required
+                ? (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Required';
+                    }
+                    return null;
+                  }
+                : null,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -30,7 +30,7 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
       }
 
       final file = result.files.first;
-      
+
       if (file.bytes == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -49,13 +49,15 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
       });
 
       final provider = Provider.of<GlucoseProvider>(context, listen: false);
-      
+
       await provider.importFromCsv(file.bytes!, file.name);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Successfully imported ${provider.glucoseData.length} readings'),
+            content: Text(
+              '✅ Successfully imported ${provider.glucoseData.length} readings',
+            ),
             backgroundColor: AppTheme.successGreen,
             duration: const Duration(seconds: 3),
           ),
@@ -89,23 +91,16 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
     final provider = Provider.of<GlucoseProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Import CSV Data'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Import CSV Data'), elevation: 0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Header Icon
-            Icon(
-              Icons.upload_file,
-              size: 80,
-              color: AppTheme.primaryBlue,
-            ),
+            Icon(Icons.upload_file, size: 80, color: AppTheme.primaryBlue),
             const SizedBox(height: 16),
-            
+
             // Title
             Text(
               'Import Dexcom Clarity CSV',
@@ -117,7 +112,7 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             // Subtitle
             Text(
               'Load glucose data from your Dexcom Clarity export file',
@@ -163,7 +158,9 @@ class _CsvImportScreenState extends State<CsvImportScreen> {
                                   '${provider.glucoseData.length} readings loaded',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                   ),
                                 ),
                               ],

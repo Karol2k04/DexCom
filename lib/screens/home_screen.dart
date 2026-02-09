@@ -6,6 +6,7 @@ import 'statistics_screen.dart';
 import 'add_meal_screen.dart';
 import 'settings_screen.dart';
 import 'food_scan_screen.dart';
+import 'meals_history_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 
@@ -49,6 +50,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _navigateToMealsHistory() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MealsHistoryScreen()),
+    );
+  }
+
   void _navigateBack() {
     setState(() {
       _currentIndex = 0;
@@ -82,6 +90,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           actions: [
+            // Meals History button
+            IconButton(
+              onPressed: _navigateToMealsHistory,
+              icon: const Icon(Icons.restaurant_menu),
+              tooltip: 'Meals History',
+              color: AppTheme.primaryBlue,
+            ),
             // Food Scan button
             IconButton(
               onPressed: _navigateToFoodScan,
@@ -154,17 +169,16 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _navigateToFoodScan,
-          backgroundColor: AppTheme.successGreen,
-          tooltip: 'Scan Food',
-          child: const Icon(
-            Icons.camera_alt,
-            size: 28,
-            color: AppTheme.white,
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: FloatingActionButton(
+            onPressed: _navigateToFoodScan,
+            backgroundColor: AppTheme.successGreen,
+            tooltip: 'Scan Food',
+            child: const Icon(Icons.camera_alt, size: 28, color: AppTheme.white),
           ),
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
     );
   }

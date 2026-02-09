@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../models/glucose_reading.dart';
+import '../models/meal.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -454,5 +455,263 @@ class FirestoreService {
 
   String _formatDateKey(DateTime dateTime) {
     return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
+  }
+
+  // ========== MEALS OPERATIONS ==========
+
+  /// Save meal to Firestore
+  Future<String> saveMeal(Meal meal) async {
+    if (_userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    try {
+      final docRef = _firestore
+          .collection('users')
+          .doc(_userId)
+          .collection('meals')
+          .doc();
+
+      final mealWithId = Meal(
+        id: docRef.id,
+        userId: _userId!,
+        mealType: meal.mealType,
+        foodName: meal.foodName,
+        timestamp: meal.timestamp,
+        imageUrl: meal.imageUrl,
+        nutritionalData: meal.nutritionalData,
+        glucoseImpact: meal.glucoseImpact,
+        notes: meal.notes,
+      );
+
+      await docRef.set(mealWithId.toFirestore());
+      debugPrint('✅ Meal saved: ${meal.foodName}');
+
+      return docRef.id;
+    } catch (e) {
+      debugPrint('❌ Error saving meal: $e');
+      rethrow;
+    }
+  }
+
+  /// Get meals stream (real-time)
+  Stream<List<Meal>> getMealsStream({
+    DateTime? startDate,
+    DateTime? endDate,
+    MealType? mealType,
+    int limit = 50,
+  }) {
+    if (_userId == null) {
+      return Stream.value([]);
+    }
+
+    Query<Map<String, dynamic>> query = _firestore
+        .collection('users')
+        .doc(_userId)
+        .collection('meals')
+        .orderBy('timestamp', descending: true)
+        .limit(limit);
+
+    if (startDate != null) {
+      query = query.where(
+        'timestamp',
+        isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+      );
+    }
+
+    if (endDate != null) {
+      query = query.where(
+        'timestamp',
+        isLessThanOrEqualTo: Timestamp.fromDate(endDate),
+      );
+    }
+
+    if (mealType != null) {
+      query = query.where('mealType', isEqualTo: mealType.name);
+    }
+
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Meal.fromFirestore(doc.data());
+      }).toList();
+    });
+  }
+
+  /// Get meals for a specific date
+  Future<List<Meal>> getMealsByDate(DateTime date) async {
+    if (_userId == null) {
+      return [];
+    }
+
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(_userId)
+          .collection('meals')
+          .where(
+            'timestamp',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+          )
+          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+          .orderBy('timestamp', descending: false)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => Meal.fromFirestore(doc.data()))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting meals by date: $e');
+      return [];
+    }
+  }
+
+  /// Get meals for a patient (for doctors)
+  Stream<List<Meal>> getPatientMealsStream({
+    required String patientId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int limit = 50,
+  }) {
+    Query<Map<String, dynamic>> query = _firestore
+        .collection('users')
+        .doc(patientId)
+        .collection('meals')
+        .orderBy('timestamp', descending: true)
+        .limit(limit);
+
+    if (startDate != null) {
+      query = query.where(
+        'timestamp',
+        isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+      );
+    }
+
+    if (endDate != null) {
+      query = query.where(
+        'timestamp',
+        isLessThanOrEqualTo: Timestamp.fromDate(endDate),
+      );
+    }
+
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Meal.fromFirestore(doc.data());
+      }).toList();
+    });
+  }
+
+  /// Update meal
+  Future<void> updateMeal(String mealId, Map<String, dynamic> updates) async {
+    if (_userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(_userId)
+          .collection('meals')
+          .doc(mealId)
+          .update(updates);
+
+      debugPrint('✅ Meal updated: $mealId');
+    } catch (e) {
+      debugPrint('❌ Error updating meal: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete meal
+  Future<void> deleteMeal(String mealId) async {
+    if (_userId == null) {
+      throw Exception('User not authenticated');
+    }
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(_userId)
+          .collection('meals')
+          .doc(mealId)
+          .delete();
+
+      debugPrint('✅ Meal deleted: $mealId');
+    } catch (e) {
+      debugPrint('❌ Error deleting meal: $e');
+      rethrow;
+    }
+  }
+
+  /// Get meal statistics for a date range
+  Future<Map<String, dynamic>> getMealStatistics({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    if (_userId == null) {
+      return {};
+    }
+
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(_userId)
+          .collection('meals')
+          .where(
+            'timestamp',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+          )
+          .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
+          .get();
+
+      final meals = snapshot.docs
+          .map((doc) => Meal.fromFirestore(doc.data()))
+          .toList();
+
+      if (meals.isEmpty) {
+        return {
+          'totalMeals': 0,
+          'avgCalories': 0.0,
+          'avgCarbs': 0.0,
+          'avgProtein': 0.0,
+          'avgFat': 0.0,
+          'mealTypeBreakdown': {},
+        };
+      }
+
+      double totalCalories = 0;
+      double totalCarbs = 0;
+      double totalProtein = 0;
+      double totalFat = 0;
+      Map<String, int> mealTypeCount = {};
+
+      for (final meal in meals) {
+        totalCalories += meal.nutritionalData.calories;
+        totalCarbs += meal.nutritionalData.carbs;
+        totalProtein += meal.nutritionalData.protein;
+        totalFat += meal.nutritionalData.fat;
+
+        final type = meal.mealType.name;
+        mealTypeCount[type] = (mealTypeCount[type] ?? 0) + 1;
+      }
+
+      return {
+        'totalMeals': meals.length,
+        'avgCalories': totalCalories / meals.length,
+        'avgCarbs': totalCarbs / meals.length,
+        'avgProtein': totalProtein / meals.length,
+        'avgFat': totalFat / meals.length,
+        'totalCalories': totalCalories,
+        'totalCarbs': totalCarbs,
+        'totalProtein': totalProtein,
+        'totalFat': totalFat,
+        'mealTypeBreakdown': mealTypeCount,
+      };
+    } catch (e) {
+      debugPrint('Error getting meal statistics: $e');
+      return {};
+    }
   }
 }

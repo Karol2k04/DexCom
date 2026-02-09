@@ -91,13 +91,13 @@ class AdminHelper {
 
 /// ALTERNATYWNIE: Prosty standalone script
 /// Możesz wywołać to w main.dart po inicjalizacji Firebase:
-/// 
+///
 /// void main() async {
 ///   WidgetsFlutterBinding.ensureInitialized();
 ///   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-///   
+///
 ///   // WYWOŁAJ RAZ I ZAKOMENTUJ!
 ///   // await AdminHelper.makeAdmin('twoj@email.com');
-///   
+///
 ///   runApp(const MyApp());
 /// }

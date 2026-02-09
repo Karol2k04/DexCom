@@ -6,23 +6,23 @@ class DexcomService {
   Dexcom? _dexcom;
   DexcomStreamProvider? _streamProvider;
   Timer? _pollingTimer;
-  
-  final StreamController<List<GlucoseReading>> _readingsController = 
+
+  final StreamController<List<GlucoseReading>> _readingsController =
       StreamController<List<GlucoseReading>>.broadcast();
-  
+
   Stream<List<GlucoseReading>> get readingsStream => _readingsController.stream;
 
   bool get isConnected => _dexcom != null;
 
   /// Connect to Dexcom with proper region support
   Future<bool> connect({
-    required String username, 
+    required String username,
     required String password,
     DexcomRegion region = DexcomRegion.ous, // Default to OUS (includes EU)
   }) async {
     try {
       print("Connecting to Dexcom with region: $region");
-      
+
       // Initialize Dexcom object with region support
       _dexcom = Dexcom(
         username: username,
@@ -30,7 +30,9 @@ class DexcomService {
         region: region, // IMPORTANT: Specify the correct region
         debug: true,
         onStatusUpdate: (status, finished) {
-          print("Dexcom status: ${status.pretty} ${finished ? '(Complete)' : ''}");
+          print(
+            "Dexcom status: ${status.pretty} ${finished ? '(Complete)' : ''}",
+          );
         },
       );
 
@@ -63,7 +65,7 @@ class DexcomService {
     if (_dexcom == null) return;
 
     _streamProvider = DexcomStreamProvider(_dexcom!, debug: true);
-    
+
     _streamProvider!.listen(
       onData: (data) {
         final readings = _mapToGlucoseReadings(data.cast<DexcomReading>());
@@ -84,7 +86,7 @@ class DexcomService {
   }
 
   /// Fetch historical data with flexible date range
-  /// 
+  ///
   /// The Dexcom API returns readings with the LATEST reading FIRST.
   /// Each day has ~288 readings (24 hours × 12 readings/hour at 5-min intervals).
   Future<void> fetchHistoricalData({int days = 10}) async {
@@ -114,14 +116,14 @@ class DexcomService {
         print("No data available for the last $days days");
         _readingsController.addError(
           "No glucose data found for the last $days days. "
-          "Your Dexcom account may not have measurements in this time range."
+          "Your Dexcom account may not have measurements in this time range.",
         );
         return;
       }
 
       final List<GlucoseReading> readings = _mapToGlucoseReadings(response);
       print("Mapped ${readings.length} readings");
-      
+
       if (readings.isNotEmpty) {
         print("Date range: ${readings.first.time} to ${readings.last.time}");
         _readingsController.add(readings);
@@ -145,14 +147,11 @@ class DexcomService {
         final value = reading.mgdL.toDouble();
         final timestamp = reading.displayTime;
 
-        final formattedTime = 
+        final formattedTime =
             '${timestamp.hour.toString().padLeft(2, '0')}:'
             '${timestamp.minute.toString().padLeft(2, '0')}';
 
-        return GlucoseReading(
-          time: formattedTime,
-          value: value,
-        );
+        return GlucoseReading(time: formattedTime, value: value);
       }).toList();
 
       // Debug: Print sample readings
@@ -173,12 +172,12 @@ class DexcomService {
   /// Refresh data manually
   Future<void> refresh() async {
     print("Manual refresh triggered");
-    
+
     // If we have a stream provider, use it
     if (_streamProvider != null) {
       _streamProvider!.refresh();
     }
-    
+
     // Also fetch historical data
     await fetchHistoricalData(days: 10);
   }
