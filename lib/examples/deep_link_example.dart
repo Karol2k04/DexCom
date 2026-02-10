@@ -1,7 +1,7 @@
 // Przykład użycia Deep Link Service w Twojej aplikacji
 // Dodaj ten kod do main.dart
 
-import 'services/deep_link_service.dart';
+//import 'services/deep_link_service.dart';
 
 /*
 PRZYKŁAD UŻYCIA W MAIN.DART:
