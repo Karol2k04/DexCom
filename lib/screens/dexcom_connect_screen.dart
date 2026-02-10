@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:dexcom/dexcom.dart';
 import '../providers/glucose_provider.dart';
 import '../theme/app_theme.dart';
+import 'package:dexcom/dexcom.dart';
 import 'health_screen.dart';
 
-/// Screen for connecting to Dexcom Share API
+/// COMPATIBLE DexcomConnectScreen - Same structure, better error display
+/// 
+/// Changes:
+/// 1. Better error message display
+/// 2. Enhanced region selector with descriptions
+/// 3. Helpful tooltips and guidance
+/// 4. All navigation and integration stays the same!
+
 class DexcomConnectScreen extends StatefulWidget {
   const DexcomConnectScreen({super.key});
 
@@ -18,8 +25,7 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  DexcomRegion _selectedRegion =
-      DexcomRegion.ous; // Default to OUS (Europe/Outside US)
+  DexcomRegion _selectedRegion = DexcomRegion.ous;
 
   @override
   void dispose() {
@@ -36,13 +42,24 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
         await provider.connectDexcom(
           _usernameController.text.trim(),
           _passwordController.text,
-          region: _selectedRegion, // Pass the selected region
+          region: _selectedRegion,
         );
 
         if (mounted && provider.isConnected) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Connected to Dexcom successfully!'),
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      '✅ Connected! ${provider.glucoseData.length} readings loaded',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
               backgroundColor: AppTheme.successGreen,
               duration: Duration(seconds: 3),
             ),
@@ -144,6 +161,54 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
               ),
               const SizedBox(height: 32),
 
+              // ERROR MESSAGE DISPLAY (IMPROVED)
+              if (provider.errorMessage != null) ...[
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.dangerRed.withOpacity(0.1),
+                    border: Border.all(
+                      color: AppTheme.dangerRed.withOpacity(0.3),
+                      width: 1.5,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: AppTheme.dangerRed,
+                            size: 24,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Connection Issue',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: AppTheme.dangerRed,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        provider.errorMessage!,
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.5,
+                          color: isDark ? Colors.grey[300] : Colors.grey[900],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // Connection Status Card (when connected)
               if (provider.isConnected)
                 Card(
@@ -209,7 +274,7 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
 
               // Login Form (when not connected)
               if (!provider.isConnected) ...[
-                // Region Selection
+                // IMPROVED Region Selection with better descriptions
                 Card(
                   elevation: 0,
                   color: isDark ? AppTheme.darkCard : AppTheme.white,
@@ -218,19 +283,32 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Server Region',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? Colors.grey[400]
-                                : AppTheme.darkGray,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              'Server Region',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : AppTheme.darkGray,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Tooltip(
+                              message: 'Select the region matching where you downloaded the DexCom app',
+                              child: Icon(
+                                Icons.help_outline,
+                                size: 16,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         DropdownButtonFormField<DexcomRegion>(
-                          initialValue: _selectedRegion,
+                          value: _selectedRegion,
                           decoration: InputDecoration(
                             hintText: 'Select your region',
                             prefixIcon: const Icon(
@@ -253,18 +331,72 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                               ),
                             ),
                           ),
-                          items: const [
+                          items: [
                             DropdownMenuItem(
                               value: DexcomRegion.us,
-                              child: Text('🇺🇸 United States'),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text('🇺🇸 ', style: TextStyle(fontSize: 20)),
+                                      Text('United States'),
+                                    ],
+                                  ),
+                                  Text(
+                                    'For US App Store accounts',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             DropdownMenuItem(
                               value: DexcomRegion.ous,
-                              child: Text('🌍 Europe / Outside US'),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text('🌍 ', style: TextStyle(fontSize: 20)),
+                                      Text('Outside US'),
+                                    ],
+                                  ),
+                                  Text(
+                                    'EU, UK, Canada, Australia',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             DropdownMenuItem(
                               value: DexcomRegion.jp,
-                              child: Text('🇯🇵 Japan'),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text('🇯🇵 ', style: TextStyle(fontSize: 20)),
+                                      Text('Japan'),
+                                    ],
+                                  ),
+                                  Text(
+                                    'For Japanese accounts',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                           onChanged: (value) {
@@ -301,6 +433,7 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                         const SizedBox(height: 8),
                         TextFormField(
                           controller: _usernameController,
+                          keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
                             hintText: 'Email, username, or phone number',
                             prefixIcon: const Icon(
@@ -440,13 +573,26 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                       disabledBackgroundColor: Colors.grey,
                     ),
                     child: provider.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppTheme.white,
-                            ),
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppTheme.white,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Text(
+                                'Connecting...',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           )
                         : const Text(
                             'Connect to Dexcom',
@@ -461,7 +607,7 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
 
               const SizedBox(height: 24),
 
-              // Info Card
+              // Info Card (IMPROVED)
               Card(
                 elevation: 0,
                 color: AppTheme.primaryBlue.withOpacity(0.1),
@@ -478,7 +624,7 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Important Information',
+                            'Before Connecting',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: AppTheme.primaryBlue,
@@ -489,11 +635,13 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        '🌍 Select the correct region where your Dexcom account is registered\n\n'
-                        '📊 This app fetches glucose data from the last 10 days\n\n'
-                        '🔐 Make sure Dexcom Share is enabled in your Dexcom app\n\n'
-                        '🔒 Your credentials are only used to connect to Dexcom\n\n'
-                        '🔄 Data refreshes automatically',
+                        '✅ Enable Share in your DexCom app (Settings → Share)\n\n'
+                        '✅ Add at least 1 follower (can be yourself)\n\n'
+                        '✅ Ensure your G7 sensor is active\n\n'
+                        '✅ Select the correct region:\n'
+                        '    • US App Store → United States\n'
+                        '    • EU/UK/Canada → Outside US\n\n'
+                        '🔒 Your credentials are secure and only used for DexCom',
                         style: TextStyle(
                           fontSize: 13,
                           height: 1.5,
@@ -502,65 +650,6 @@ class _DexcomConnectScreenState extends State<DexcomConnectScreen> {
                       ),
                     ],
                   ),
-                ),
-              ),
-
-              // Troubleshooting Card
-              const SizedBox(height: 16),
-              Card(
-                elevation: 0,
-                color: isDark ? AppTheme.darkCard : AppTheme.white,
-                child: ExpansionTile(
-                  leading: const Icon(
-                    Icons.help_outline,
-                    color: AppTheme.warningOrange,
-                  ),
-                  title: const Text('Troubleshooting'),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Connection Issues:',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '• Make sure you selected the correct region\n'
-                            '• Double-check your username and password\n'
-                            '• Ensure Dexcom Share is enabled in your Dexcom app\n'
-                            '• Check your internet connection\n'
-                            '• Verify credentials work on share.dexcom.com',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark
-                                  ? Colors.grey[400]
-                                  : Colors.grey[700],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Region Guide:',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '• United States: For US-based accounts\n'
-                            '• Europe/Outside US: For EU, UK, and international accounts\n'
-                            '• Japan: For Japan-based accounts',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: isDark
-                                  ? Colors.grey[400]
-                                  : Colors.grey[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                 ),
               ),
             ],

@@ -12,13 +12,18 @@ class GlucoseReading {
     int? timestamp,
   }) : timestamp = timestamp ?? DateTime.now().millisecondsSinceEpoch;
 
-  // Factory constructor to parse from Dexcom API response
   factory GlucoseReading.fromDexcom(Map<String, dynamic> json) {
-    // The API usually returns 'Value' as a string or int, and 'DT' as a date string
-    final rawValue = json['Value'] ?? 0;
-    final DateTime timestamp = DateTime.parse(
-      json['DT'].toString().replaceAll('/Date(', '').replaceAll(')/', ''),
-    );
+    final rawValue = json['Value'];
+    if (rawValue == null) {
+      throw Exception('Missing glucose value');
+    }
+
+    final DateTime? timestamp =
+        _parseDexcomTimestamp(json['WT'] ?? json['DT']);
+
+    if (timestamp == null) {
+      throw Exception('Invalid Dexcom timestamp');
+    }
 
     return GlucoseReading(
       time:
@@ -27,4 +32,15 @@ class GlucoseReading {
       timestamp: timestamp.millisecondsSinceEpoch,
     );
   }
+}
+
+
+DateTime? _parseDexcomTimestamp(dynamic raw) {
+  if (raw == null) return null;
+
+  final match = RegExp(r'(\d{10,})').firstMatch(raw.toString());
+  if (match == null) return null;
+
+  final millis = int.parse(match.group(1)!);
+  return DateTime.fromMillisecondsSinceEpoch(millis, isUtc: true);
 }
