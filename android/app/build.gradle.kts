@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.example.flutter_application_dexcom"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -27,9 +27,15 @@ android {
         applicationId = "com.example.flutter_application_dexcom"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+<<<<<<< HEAD
         // Elevate minSdk to meet plugin requirements (health plugin requires minSdk 26, Health Connect requires 28).
         minSdk = 28
         targetSdk = flutter.targetSdkVersion
+=======
+        // Elevate minSdk to meet plugin requirements (health plugin requires minSdk 26).
+        minSdk = 26
+        targetSdk = 34
+>>>>>>> f6e376c9a7e30aa65ba69ede0df6d0255cff2ff5
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

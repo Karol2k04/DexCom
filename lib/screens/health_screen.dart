@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:health/health.dart';
 import '../services/health_service.dart';
 import '../theme/app_theme.dart';
 
@@ -102,15 +103,29 @@ class _HealthScreenState extends State<HealthScreen>
     }
 
     setState(() => _loading = true);
+    
+    // 1. Standard Permissions
     final res = await _svc.requestPermissions();
-    final ok = res['ok'] == true;
-    final msg =
-        res['message'] as String? ?? 'Permission denied for Health data';
+    bool ok = res['ok'] == true;
+    
+    // 2. History Permissions (Only if standard was successful)
+    if (ok) {
+      try {
+        // This triggers the "Allow past data" system dialog
+        await Health().requestHealthDataHistoryAuthorization();
+      } catch (e) {
+        debugPrint("History request failed: $e");
+      }
+    }
+
+    final msg = res['message'] as String? ?? 'Permission denied for Health data';
+    
     setState(() {
       _permsGranted = ok;
       _loading = false;
     });
 
+    // KEEP THIS: It gives the user feedback that the process finished
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

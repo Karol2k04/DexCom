@@ -124,10 +124,11 @@ packages:
   dexcom:
     dependency: "direct main"
     description:
-      name: dexcom
-      sha256: cbf88ed185bddd2801a1868ec6f03dc3dcd05827ccd702af826c9920b51fb54c
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: main
+      resolved-ref: f9f3b5532dadf6d339f5d10488b50b7b055fa63e
+      url: "https://github.com/SmilingCheshire/dexcom.git"
+    source: git
     version: "1.1.4"
   equatable:
     dependency: transitive
