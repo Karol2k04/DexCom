@@ -104,6 +104,7 @@ class _HealthScreenState extends State<HealthScreen>
     setState(() => _loading = true);
     final res = await _svc.requestPermissions();
     final ok = res['ok'] == true;
+    final openedSettings = res['openedSettings'] == true;
     final msg =
         res['message'] as String? ?? 'Permission denied for Health data';
     setState(() {
@@ -115,8 +116,15 @@ class _HealthScreenState extends State<HealthScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(ok ? 'Health permissions granted' : msg),
-          backgroundColor: ok ? AppTheme.successGreen : AppTheme.dangerRed,
-          action: (!ok && msg.contains('Health Connect'))
+          backgroundColor: ok
+              ? AppTheme.successGreen
+              : openedSettings
+              ? AppTheme.warningOrange
+              : AppTheme.dangerRed,
+          duration: openedSettings
+              ? const Duration(seconds: 5)
+              : const Duration(seconds: 4),
+          action: (!ok && msg.contains('Health Connect') && !openedSettings)
               ? SnackBarAction(
                   label: 'Install',
                   textColor: AppTheme.white,
@@ -233,6 +241,36 @@ class _HealthScreenState extends State<HealthScreen>
                             ),
                           ],
                         ),
+                        if (!kIsWeb && _healthConnectAvailable != false)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: OutlinedButton.icon(
+                              onPressed: _loading
+                                  ? null
+                                  : () async {
+                                      final opened = await _svc
+                                          .openHealthConnectSettings();
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              opened
+                                                  ? 'Opening Health Connect - grant permissions to this app'
+                                                  : 'Could not open Health Connect settings',
+                                            ),
+                                            backgroundColor: opened
+                                                ? AppTheme.successGreen
+                                                : AppTheme.dangerRed,
+                                          ),
+                                        );
+                                      }
+                                    },
+                              icon: const Icon(Icons.settings),
+                              label: const Text('Open Health Connect'),
+                            ),
+                          ),
                         const SizedBox(height: 8),
                         if (!kIsWeb && _healthConnectAvailable == false)
                           Card(

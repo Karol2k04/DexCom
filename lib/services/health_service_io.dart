@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Native implementation (Android/iOS) of HealthService using the `health` package.
 /// Public API uses string metric keys to remain platform-safe and avoid web-only compilation issues.
@@ -46,6 +47,23 @@ class HealthService {
     'BASAL_ENERGY_BURNED': HealthDataType.BASAL_ENERGY_BURNED,
   };
 
+  /// Opens Health Connect settings where user can manually grant permissions
+  Future<bool> openHealthConnectSettings() async {
+    try {
+      if (!Platform.isAndroid) return false;
+
+      // Try to open Health Connect app directly
+      final uri = Uri.parse('package:com.google.android.apps.healthdata');
+      if (await canLaunchUrl(uri)) {
+        return await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Failed to open Health Connect settings: $e');
+      return false;
+    }
+  }
+
   /// Request permissions for all selected metrics
   /// Returns a map: { 'ok': bool, 'message': String }
   Future<Map<String, dynamic>> requestPermissions() async {
@@ -65,30 +83,54 @@ class HealthService {
       final has = await _health.hasPermissions(types);
       debugPrint('Health.hasPermissions -> $has');
 
-      final ok = await _health.requestAuthorization(types);
-      if (ok == true) {
-        return {'ok': true, 'message': 'Health permissions granted'};
+      // If already has permissions, return success
+      if (has == true) {
+        return {'ok': true, 'message': 'Health permissions already granted'};
+      }
+
+      // Try standard requestAuthorization
+      try {
+        final ok = await _health.requestAuthorization(types);
+        if (ok == true) {
+          return {'ok': true, 'message': 'Health permissions granted'};
+        }
+      } catch (e) {
+        debugPrint('requestAuthorization failed: $e');
+
+        // Fallback: Open Health Connect settings manually
+        if (Platform.isAndroid) {
+          final opened = await openHealthConnectSettings();
+          if (opened) {
+            return {
+              'ok': false,
+              'message':
+                  'Please grant permissions in Health Connect and try again',
+              'openedSettings': true,
+            };
+          }
+        }
       }
 
       // On Android some read operations may require the Health Data History permission
       if (Platform.isAndroid) {
-        final histAvailable = await _health.isHealthDataHistoryAvailable();
-        final histAuthorized = await _health.isHealthDataHistoryAuthorized();
-        debugPrint(
-          'Health history available=$histAvailable authorized=$histAuthorized',
-        );
-        if (histAvailable && !histAuthorized) {
-          final histOk = await _health.requestHealthDataHistoryAuthorization();
-          if (histOk == true) {
-            return {
-              'ok': true,
-              'message': 'Health Data History permission granted',
-            };
+        try {
+          final histAvailable = await _health.isHealthDataHistoryAvailable();
+          final histAuthorized = await _health.isHealthDataHistoryAuthorized();
+          debugPrint(
+            'Health history available=$histAvailable authorized=$histAuthorized',
+          );
+          if (histAvailable && !histAuthorized) {
+            final histOk = await _health
+                .requestHealthDataHistoryAuthorization();
+            if (histOk == true) {
+              return {
+                'ok': true,
+                'message': 'Health Data History permission granted',
+              };
+            }
           }
-          return {
-            'ok': false,
-            'message': 'Health Data History permission denied',
-          };
+        } catch (e) {
+          debugPrint('Health history permission check failed: $e');
         }
       }
 

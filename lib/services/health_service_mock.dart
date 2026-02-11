@@ -30,6 +30,11 @@ class HealthService {
     return {'ok': true, 'message': 'Mock: permissions granted'};
   }
 
+  Future<bool> openHealthConnectSettings() async {
+    debugPrint('Mock: openHealthConnectSettings() called');
+    return true;
+  }
+
   /// Returns a list of synthetic points for the metric between start and end.
   Future<List<Map<String, dynamic>>> fetchData(
     String metric,

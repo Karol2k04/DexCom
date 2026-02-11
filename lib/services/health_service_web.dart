@@ -7,6 +7,10 @@ class HealthService {
     return {'ok': false, 'message': 'Health APIs are not available on web'};
   }
 
+  Future<bool> openHealthConnectSettings() async {
+    return false;
+  }
+
   Future<void> installHealthConnect() async {
     // No-op on web
   }
