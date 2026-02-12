@@ -70,15 +70,7 @@ class HealthService {
     try {
       final types = _mapping.values.toList();
 
-      // Android: ensure Health Connect availability
-      if (Platform.isAndroid) {
-        final avail = await _health.isHealthConnectAvailable();
-        if (!avail) {
-          final msg = 'Google Health Connect is not available on this device';
-          debugPrint(msg);
-          return {'ok': false, 'message': msg};
-        }
-      }
+      debugPrint('Requesting health permissions for ${types.length} types...');
 
       final has = await _health.hasPermissions(types);
       debugPrint('Health.hasPermissions -> $has');
@@ -88,53 +80,15 @@ class HealthService {
         return {'ok': true, 'message': 'Health permissions already granted'};
       }
 
-      // Try standard requestAuthorization
-      try {
-        final ok = await _health.requestAuthorization(types);
-        if (ok == true) {
-          return {'ok': true, 'message': 'Health permissions granted'};
-        }
-      } catch (e) {
-        debugPrint('requestAuthorization failed: $e');
+      // Request authorization
+      final ok = await _health.requestAuthorization(types);
+      debugPrint('requestAuthorization result: $ok');
 
-        // Fallback: Open Health Connect settings manually
-        if (Platform.isAndroid) {
-          final opened = await openHealthConnectSettings();
-          if (opened) {
-            return {
-              'ok': false,
-              'message':
-                  'Please grant permissions in Health Connect and try again',
-              'openedSettings': true,
-            };
-          }
-        }
+      if (ok == true) {
+        return {'ok': true, 'message': 'Health permissions granted'};
       }
 
-      // On Android some read operations may require the Health Data History permission
-      if (Platform.isAndroid) {
-        try {
-          final histAvailable = await _health.isHealthDataHistoryAvailable();
-          final histAuthorized = await _health.isHealthDataHistoryAuthorized();
-          debugPrint(
-            'Health history available=$histAvailable authorized=$histAuthorized',
-          );
-          if (histAvailable && !histAuthorized) {
-            final histOk = await _health
-                .requestHealthDataHistoryAuthorization();
-            if (histOk == true) {
-              return {
-                'ok': true,
-                'message': 'Health Data History permission granted',
-              };
-            }
-          }
-        } catch (e) {
-          debugPrint('Health history permission check failed: $e');
-        }
-      }
-
-      return {'ok': false, 'message': 'Request authorization denied'};
+      return {'ok': false, 'message': 'Authorization denied or incomplete'};
     } catch (e) {
       debugPrint('Health permission request failed: $e');
       return {'ok': false, 'message': 'Exception: $e'};
@@ -150,16 +104,28 @@ class HealthService {
   ) async {
     try {
       final type = _mapping[metric];
-      if (type == null) return [];
+      if (type == null) {
+        debugPrint('Unknown metric: $metric');
+        return [];
+      }
 
+      // Request authorization for this specific type
+      debugPrint('Requesting authorization for $metric from $start to $end');
       final ok = await _health.requestAuthorization([type]);
-      if (!ok) return [];
+      if (!ok) {
+        debugPrint('Authorization denied for $metric');
+        return [];
+      }
 
+      debugPrint('Fetching data for $metric...');
       final list = await _health.getHealthDataFromTypes(
         startTime: start,
         endTime: end,
         types: [type],
       );
+
+      debugPrint('Fetched ${list.length} data points for $metric');
+
       return list.map((p) {
         dynamic v;
         try {
@@ -182,18 +148,30 @@ class HealthService {
 
   /// Fetch latest values for each metric (last [range] window)
   Future<Map<String, List<Map<String, dynamic>>>> fetchAll({
-    Duration range = const Duration(days: 1),
+    Duration range = const Duration(days: 7),
   }) async {
     final now = DateTime.now();
     final from = now.subtract(range);
 
+    debugPrint(
+      '=== Fetching all ${allMetrics.length} metrics from $from to $now ===',
+    );
+
     final result = <String, List<Map<String, dynamic>>>{};
 
     for (final m in allMetrics) {
-      final pts = await fetchData(m, from, now);
-      result[m] = pts;
+      try {
+        debugPrint('>>> Fetching metric: $m');
+        final pts = await fetchData(m, from, now);
+        result[m] = pts;
+        debugPrint('<<< $m: ${pts.length} points retrieved');
+      } catch (e) {
+        debugPrint('!!! Error fetching metric $m: $e');
+        result[m] = []; // Continue with other metrics
+      }
     }
 
+    debugPrint('=== Fetch complete: ${result.length} metrics processed ===');
     return result;
   }
 
